@@ -1,5 +1,16 @@
 {
-    "require": {
-        "twig/twig": "^2.0"
-    }
+	"name": "bztfinformatik/lb1-21r8390-php",
+	"description": "Configure MkDocs documentation easily through a simple UI",
+	"type": "project",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Manuel Schumacher",
+			"email": "21r8390@bztf.ch"
+		}
+	],
+	"require": {
+		"twig/twig": "^2.0",
+		"monolog/monolog": "^3.2"
+	}
 }
