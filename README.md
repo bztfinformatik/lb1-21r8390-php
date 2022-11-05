@@ -30,5 +30,6 @@
 
 -   Monolog
     -   ELK-Stack
+    -   https://github.com/andybeak/monolog-elk-demo
 -   Komponenten
 -   Tailwind CSS

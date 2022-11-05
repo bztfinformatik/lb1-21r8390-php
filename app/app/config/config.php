@@ -6,3 +6,4 @@ define('APPROOT', dirname(dirname(__FILE__)));
 // Unsere URL-Root
 define('URLROOT', 'http://localhost:8000');
 
+define('LOGSTASH', 'logstash:9001');

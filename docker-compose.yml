@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 
 volumes:
     # mysqldata:
@@ -10,8 +10,26 @@ services:
         build: ./php
         ports:
             - 9438:80
+        depends_on:
+            - logstash
+        restart: always
         volumes:
             - ./app:/var/www/html
+
+    logstash:
+        build: ./logstash
+        ports:
+            - 9001:9001
+        restart: unless-stopped
+        environment:
+            LS_JAVA_OPTS: "-Xms500m -Xmx500m -XX:ParallelGCThreads=1"
+        volumes:
+            - "./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml"
+            - "./logstash/logstash.conf:/usr/share/logstash/config/logstash_simple.conf"
+        entrypoint:
+            - logstash
+            - -f
+            - /usr/share/logstash/config/logstash_simple.conf
 
     # mysql:
     #     image: mysql:8
