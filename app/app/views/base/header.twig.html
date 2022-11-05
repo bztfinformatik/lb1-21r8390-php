@@ -1,0 +1,40 @@
+<header>
+  <!-- Fixed navbar -->
+  <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">Menü-Bestellung</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+        aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="{{ urlroot }}/Home">Home <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ urlroot }}/Orders/add">Bestellung</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link" href="{{ urlroot }}/Orders/listmyorders">Bestellung für mich auflisten</a>
+            </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ urlroot }}/Ordersadmin/">Admin-Liste der Bestellungen</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ urlroot }}/Users/">User</a>
+          </li>
+        </ul>
+
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ urlroot }}/Users/register">Register</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ urlroot }}/Users/login">Login</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>

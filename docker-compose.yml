@@ -1,0 +1,33 @@
+version: "3"
+
+volumes:
+    # mysqldata:
+    # mysqlinit:
+    app:
+
+services:
+    php:
+        build: ./php
+        ports:
+            - 9438:80
+        volumes:
+            - ./app:/var/www/html
+
+    # mysql:
+    #     image: mysql:8
+    #     ports:
+    #         - 3306:3306
+    #     command: --default-authentication-plugin=mysql_native_password
+    #     environment:
+    #         MYSQL_ROOT_PASSWORD: root
+    #         MYSQL_USER: user
+    #         MYSQL_PASSWORD: userpass
+    #         MYSQL_DATABASE: testdb
+    #     volumes:
+    #         - ./mysql/initscripts:/docker-entrypoint-initdb.d
+    #         - ./mysql/mysqldata:/var/lib/mysql/
+
+    # adminer:
+    #     image: adminer
+    #     ports:
+    #         - 8080:8080
