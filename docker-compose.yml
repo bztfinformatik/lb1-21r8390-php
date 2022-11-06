@@ -24,6 +24,9 @@ services:
             - backend
         volumes:
             - ./app:/var/www/html
+        environment:
+            - IS_LOGGING=${IS_LOGGING}
+            - ROOT_PORT=${PHP_PORT}
 
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}

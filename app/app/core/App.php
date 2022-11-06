@@ -2,7 +2,7 @@
 
 class App
 {
-    protected $controller = 'home';
+    protected $controller = 'NotFound';
     protected $method = 'index';
 
     protected $params = [];
@@ -46,24 +46,28 @@ class App
      * @param array $url The URL as an array
      * @return void
      */
-    private function loadController(array $url)
+    private function loadController(array &$url)
     {
-        // Gets the controller name from the URL
-        $controllerName = isset($url[0]) ? $url[0] : 'home';
+        // Gets the controller name from the URL or shows the landing page
+        $controllerPath = isset($url[0]) ? $url[0] : 'ErrorHandler';
 
         // Checks if the controller exists and sets the controller
-        if (file_exists('../app/controllers/' . $controllerName . '.php')) {
-            $this->controller = $controllerName;
+        if (file_exists('../app/controllers/' . $controllerPath . '.php')) {
             unset($url[0]);
         } else {
             // Could not find the controller
-            $this->controller = '404';
-            redirect('404');
+            $controllerPath = 'ErrorHandler';
+            $url[1] = 'notFound';
         }
 
         // Load the controller
-        require_once '../app/controllers/' . $this->controller . '.php';
-        $this->controller = new $this->controller;
+        require_once '../app/controllers/' . $controllerPath . '.php';
+
+        // Gets the controller name
+        $controllerName = resolveComponentName($controllerPath);
+
+        // Create the controller
+        $this->controller = new $controllerName;
     }
 
     /**
@@ -78,6 +82,9 @@ class App
         if (isset($url[1]) && method_exists($this->controller, $url[1])) {
             $this->method = $url[1];
             unset($url[1]);
+        } else {
+            // Could not find the method
+            $this->method = 'index';
         }
     }
 }
