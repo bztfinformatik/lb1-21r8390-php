@@ -12,6 +12,6 @@ class Home extends Controller
      */
     public function index($name = 'ChangeME - Home/Index')
     {
-        echo $this->twig->render('home/index.twig.html', ['title' => $name, 'urlroot' => URLROOT] );                
+        $this->render('home/index', ['name' => $name]);
     }
 }
