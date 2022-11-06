@@ -9,39 +9,75 @@ class App
 
     public function __construct()
     {
-        //echo 'Test';
-        //print_r($this->parseUrl());
+        // Parse the URL
         $url = $this->parseUrl();
 
-        if (file_exists('../app/controllers/' . $url[0] . '.php')) {
-            $this->controller = $url[0];
-            unset($url[0]);
-        }
+        // Loads the controller
+        $this->loadController($url);
 
-        require_once '../app/controllers/' . $this->controller . '.php';
-        $this->controller = new $this->controller;
+        // Loads the method
+        $this->loadMethod($url);
 
-        if (isset($url[1])) {
-            if (method_exists($this->controller, $url[1])) {
-                $this->method = $url[1];
-                unset($url[1]);
-            }
-        }
+        // Gets all parameters which are not null to be passed to the method
+        $this->params = isset($url) ? array_values($url) : [];
 
-
-        $this->params = $url ? array_values($url) : [];
-
-        //var_dump($this->controller);
-        //echo $this->controller;
-
+        // Call the method with the parameters of the controller
         call_user_func_array([$this->controller, $this->method], $this->params);
     }
 
-    protected function parseUrl()
+    /**
+     * Parse the URL into an array
+     *
+     * @return string[] Array with the URL parts
+     */
+    private function parseUrl(): array
     {
         if (isset($_GET['url'])) {
-            //echo $_GET['url'];
-            return $url = explode('/', filter_var(rtrim($_GET['url'], '/'), FILTER_SANITIZE_URL));
+            // Split URL into parts
+            return explode('/', filter_var(rtrim($_GET['url'], '/'), FILTER_SANITIZE_URL));
+        }
+        // No URL given
+        return [];
+    }
+
+    /**
+     * Loads the controller from the URL
+     *
+     * @param array $url The URL as an array
+     * @return void
+     */
+    private function loadController(array $url)
+    {
+        // Gets the controller name from the URL
+        $controllerName = isset($url[0]) ? $url[0] : 'home';
+
+        // Checks if the controller exists and sets the controller
+        if (file_exists('../app/controllers/' . $controllerName . '.php')) {
+            $this->controller = $controllerName;
+            unset($url[0]);
+        } else {
+            // Could not find the controller
+            $this->controller = '404';
+            redirect('404');
+        }
+
+        // Load the controller
+        require_once '../app/controllers/' . $this->controller . '.php';
+        $this->controller = new $this->controller;
+    }
+
+    /**
+     * Load the method from the URL
+     *
+     * @param array $url The URL as an array
+     * @return void
+     */
+    private function loadMethod(array &$url)
+    {
+        // Check if url has a method and if the method exists
+        if (isset($url[1]) && method_exists($this->controller, $url[1])) {
+            $this->method = $url[1];
+            unset($url[1]);
         }
     }
 }

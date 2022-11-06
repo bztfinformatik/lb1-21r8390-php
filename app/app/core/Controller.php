@@ -6,6 +6,11 @@ use Monolog\Handler\SocketHandler;
 use \Twig\Environment;
 use \Twig\Loader\FilesystemLoader;
 
+/**
+ * The core controller class which is extended by all other controllers.
+ *
+ * It loads the models and the views.
+ */
 class Controller
 {
     private $twig;
@@ -58,25 +63,6 @@ class Controller
     }
 
     /**
-     * Render a view using Twig
-     *
-     * @param string $view The view to render
-     * @param array $params The parameters to pass to the view
-     */
-    protected function render($path = '', $data = [])
-    {
-        $this->log('Rendering view: ' . $path, Logger::INFO);
-
-        // Adding default data
-        $path = $path . '.twig.html';
-
-        $data['urlroot'] = URLROOT;
-
-        // Render our view
-        echo $this->twig->render($path, $data);
-    }
-
-    /**
      * Loads a model from the models folder (`app/models`) and returns it
      *
      * @param string $model The model to load
@@ -94,6 +80,25 @@ class Controller
         } else {
             $this->log('Model ' . $model . ' does not exists!', Logger::CRITICAL);
         }
+    }
+
+    /**
+     * Render a view using Twig
+     *
+     * @param string $view The view to render
+     * @param array $params The parameters to pass to the view
+     */
+    protected function render($path = '', $data = [])
+    {
+        $this->log('Rendering view: ' . $path, Logger::INFO);
+
+        // Adding default data
+        $path = $path . '.twig.html';
+
+        $data['urlroot'] = URLROOT;
+
+        // Render our view
+        echo $this->twig->render($path, $data);
     }
 
     /**

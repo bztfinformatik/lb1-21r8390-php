@@ -7,7 +7,7 @@
 
 [Doku 📚](https://bztfinformatik.github.io/lernportfolio-21r8390-php/)
 
-[Source Code 📂](https://github.com/bztfinformatik/lb1-21r8390)
+[Dokumentation 📂](https://github.com/bztfinformatik/lernportfolio-21r8390-php)
 
 ## How To:
 

@@ -2,9 +2,8 @@
 
 
 /**
-* Base-Model 
-*/
-
-class BaseModel {
-    
+ * The core model class which is extended by all other models.
+ */
+class BaseModel
+{
 }
