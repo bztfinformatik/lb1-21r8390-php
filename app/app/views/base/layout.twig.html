@@ -1,50 +1,47 @@
-
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="asset/favicon.ico">
 
-    <title>{{ title }}</title>
-  
-    {% block stylesheets %}
-    <!-- Bootstrap core CSS -->
-    <!-- Custom styles for this template -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="{{ urlroot }}/css/sticky-footer-navbar.css"/>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="asset/favicon.ico">
+
+  <title>{{ title }}</title>
+
+  {% block stylesheets %}
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@2.38.1/dist/full.css" rel="stylesheet" type="text/css" />
+  {% endblock %}
+</head>
+
+<body>
+
+  <!-- Include der Navbar -->
+  {{ include('base/header.twig.html') }}
+
+
+  <!-- Begin page content -->
+  <main role="main" class="container">
+    <button class="btn btn-primary">Button</button>
+    <!-- Der Content Block kann von Subtemplates überschrieben werden -->
+    {% block content %}
+
+    <h1>Index</h1>
+    <p class="important">
+      Das ist Default-Text auf dem Layout, falls der Content-Block nicht von Sub-Templates überschrieben wird
+    </p>
+
     {% endblock %}
-    
-  </head>
 
-  <body>
-
-    <!-- Include der Navbar -->
-    {{ include('base/header.twig.html') }}
+  </main>
 
 
-    <!-- Begin page content -->
-    <main role="main" class="container">
+  <!-- Include Footer -->
+  {{ include('base/footer.twig.html') }}
 
-        <!-- Der Content Block kann von Subtemplates überschrieben werden -->
-        {% block content %}
+  <!-- Include von js-Imports -->
+  {{ include('base/corejs.twig.html') }}
+</body>
 
-        <h1>Index</h1>
-        <p class="important">
-            Das ist Default-Text auf dem Layout, falls der Content-Block nicht von Sub-Templates überschrieben wird
-        </p>
-        
-        {% endblock %}
-
-    </main>
-
-
-    <!-- Include Footer -->
-    {{ include('base/footer.twig.html') }}
-    
-     <!-- Include von js-Imports -->
-    {{ include('base/corejs.twig.html') }}
-  </body>
 </html>
