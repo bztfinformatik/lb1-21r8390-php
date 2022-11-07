@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="emerald">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="language" content="en">
+    <meta name="keywords" content="m133, php, mkdocs, documentation, generation, project, learning">
+    <meta name="description" content="M133 - PHP project">
+    <meta name="author" content="Manuel Schumacher">
+    <meta name="robots" content="index, follow">
+    <meta name="revisit-after" content="7 days">
+
+    <!-- Loading Tailwind CSS via CND is very bad! -->
+    <link href="css/daisyui.css" rel="stylesheet" type="text/css" />
+    <link href="css/styles.css" rel="stylesheet" type="text/css" />
+    <link rel="icon" href="asset/favicon.ico">
+
+    <script src="js/tailwindcss.js"></script>
+
+    <!-- <meta http-equiv="refresh" content="5"> -->
+
+    <title>{{ title }}</title>
+</head>
+
+<body>
+    {% include('base/header.twig.html') with {navlinks: block('navlinks')} %}
+
+    <main role="main">
+        {% block content %}
+
+        {{ include('error/404.twig.html') }}
+
+        {% endblock %}
+    </main>
+
+    {% block footer %}{% endblock %}
+</body>
+
+</html>
