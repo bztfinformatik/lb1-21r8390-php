@@ -1,0 +1,14 @@
+{% extends "base/main.twig.html" %}
+
+{% block navlinks %}
+<a href="/login/singin" class="flex-0 btn btn-ghost px-2 text-base-content">Sign In</a>
+<a href="/login/signup" class="flex-0 btn btn-outline btn-ghost px-2 text-base-content">Sing Up</a>
+{% endblock %}
+
+{% block content %}
+<img class=" w-100" src="img/404.svg">
+{% endblock %}
+
+{% block footer %}
+{{ include('base/footer.twig.html') }}
+{% endblock %}
