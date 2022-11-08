@@ -14,6 +14,6 @@ class ErrorHandler extends Controller
 
     public function notFound(string $page = 'Page not found')
     {
-        $this->render('error/404', ['page' => $page]);
+        $this->render('error/404', ['notFoundPage' => $page]);
     }
 }
