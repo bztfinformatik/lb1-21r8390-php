@@ -7,12 +7,20 @@ class ErrorHandler extends Controller
         parent::__construct(false);
     }
 
+    /**
+     * Shows the landing page
+     */
     public function index()
     {
         $this->render('landingpage');
     }
 
-    public function notFound(string $page = 'Page not found')
+    /**
+     * Shows the 404 page
+     *
+     * @param string $page The page that was not found
+     */
+    public function notFound(string $page = 'you are looking for')
     {
         $this->render('error/404', ['notFoundPage' => $page]);
     }
