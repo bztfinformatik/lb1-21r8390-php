@@ -21,7 +21,7 @@
 
     <script async src="/js/tailwindcss.js"></script>
 
-    <title>{{ title }}</title>
+    <title>MkSimple</title>
 </head>
 
 <body class="flex flex-col min-h-screen justify-between">
@@ -34,7 +34,7 @@
     </header>
 
     <main role="main" class="self-center">
-        <div class="container mx-auto px-4">
+        <div class="container mx-auto sm:px-4">
             {% block content %}
             {{ include('error/404.twig.html') }}
             {% endblock %}
@@ -43,6 +43,8 @@
 
     {% if wantFooter == true %}
     {{ include('base/footer.twig.html') }}
+    {% else %}
+    <div></div>
     {% endif %}
 
     <script async src="/js/custom.js"></script>

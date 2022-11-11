@@ -18,11 +18,11 @@ class UserController extends Controller
     #region Endpoints
 
     /**
-     * Shows the profile page of the user
+     * Redirects to the login page
      */
     public function index()
     {
-        echo 'test';
+        redirect('login/signin');
     }
 
     /**
@@ -82,7 +82,7 @@ class UserController extends Controller
         }
 
         // Load the view
-        $this->render('user/signin', ['urlroot' => URLROOT, 'data' => $data, 'message' => $message]);
+        $this->render('user/signin', ['urlroot' => URLROOT . '/login/signIn', 'data' => $data, 'message' => $message]);
     }
 
     /**
@@ -133,6 +133,8 @@ class UserController extends Controller
                     // TODO: Popup with the message that the email has been sent
                     $message = "The verification email has been sent. Please check your inbox.\nIf you don't see it, check your spam folder. \n\n!! This feature is not implemented yet, because it depends strongly on the database !!";
 
+                    $this->userRepository->save($user);
+
                     // Log that the user has logged in
                     $this->logger->log("User '$user->email' has successfully signed up", Logger::INFO);
                 } else {
@@ -145,7 +147,122 @@ class UserController extends Controller
         }
 
         // Load the view
-        $this->render('user/signup', ['form_url' => URLROOT . '/login/signUp', 'data' => $data, 'message' => $message]);
+        $this->render('user/signup', ['form_url' => URLROOT . '/login/signUp', 'data' => $data, 'message_title' => 'Next steps - Verification', 'message' => $message]);
+    }
+
+    /**
+     * Shows the profile page with the profile form
+     */
+    public function profile()
+    {
+        // Check if the user is logged in
+        // TODO: Make session manager working
+        // if (!SessionManager::isLoggedIn()) {
+        //     redirect('login/signin', true);
+        //     return;
+        // }
+
+        // Init the form data
+        $data = [
+            'name' => '',       // From field data
+            'name_err' => '',   // Field error message
+            'email' => '',
+            'email_err' => '',
+            'wants_updates' => true,
+            'password' => '',
+            'password_err' => '',
+            'picture' => '',
+            'picture_err' => '',
+            'csrf_token' => '',
+        ];
+        $message_title = '';
+        $message = '';
+
+        $passwordPlaceholder = 'The real password is not shown here!';
+
+        // Check if the form was submitted or requested
+        $isPost = strtoupper($_SERVER['REQUEST_METHOD']) == 'POST';
+        if ($isPost && !SessionManager::isCSRFTokenValid($_POST['csrf_token'])) {
+            $this->logger->log('CSRF token of user ' . SessionManager::getCurrentUserId() . ' is invalid', Logger::WARNING);
+            $message_title = 'The CSRF token is invalid';
+            $message = 'Your request seems to be faulty. Please refresh the page and try again!';
+        } elseif ($isPost) {
+            // Sanitize POST data
+            $data['name'] = $name = trim(htmlspecialchars($_POST['name']));
+            $data['email'] = $email = trim(htmlspecialchars($_POST['email']));
+            $data['wants_updates'] = $wantsUpdates = filter_has_var(INPUT_POST, 'wants_updates');
+            $data['password'] = $password = trim($_POST['password']);
+            $data['picture'] = $picture = trim(htmlspecialchars($_POST['picture']));
+
+            // Validate the form
+            $data['name_err'] = $this->validateName($name);
+            $data['email_err'] = $this->validateEmail($email);
+            if ($passwordPlaceholder != $password) {
+                // Only validate the password if it was changed
+                $data['password_err'] = $this->validatePassword($password);
+            }
+            $data['picture_err'] = $this->validatePicture($picture);
+
+            // Only if there are no errors, try to register
+            if (empty($data['name_err']) && empty($data['email_err']) && empty($data['password_err']) && empty($data['picture_err'])) {
+                // Check if the user exists and the password is correct
+                $user = $this->userRepository->getUserByEmail($email);
+                if ($user && $user->id == SessionManager::getCurrentUserId()) {
+                    // Check if email was changed
+                    if ($user->email != $email) {
+                        // Send the verification email
+                        // TODO: Popup with the message that the email has been sent
+                        $message_title = 'Verification needed';
+                        $message = "Because you changed your email we send you a new verification link. Please reverify that this email is valid.\nIf you don't see it, check your spam folder. \n\n!! This feature is not implemented yet, because it depends strongly on the database !!";
+
+                        // Generate a verification token and send it to the user
+                        $user->isVerified = false;
+                        $user->verificationToken = $this->generateSalt();
+                    }
+
+                    $user->name = $name;
+                    $user->email = $email;
+                    $user->wantsUpdates = $wantsUpdates;
+                    // Only change the password if it was changed
+                    if ($passwordPlaceholder != $password) {
+                        // Generate a salt and hash the password
+                        $user->salt = $this->generateSalt();
+                        $user->password = password_hash($user->salt . $this->getSaltSeparator() . $password, PASSWORD_DEFAULT);
+                    }
+                    $user->picture = $picture;
+
+                    $this->userRepository->save($user);
+
+                    // Log that the user has logged in
+                    $this->logger->log("User '$user->id' has successfully updated his profile", Logger::INFO);
+
+                    // Redirect to the dashboard
+                    redirect('dashboard', true);
+                    return;
+                } else {
+                    $data['email_err'] = 'The email is already registered';
+                    $this->logger->log("Profile update for user '$email' failed!", Logger::INFO);
+                }
+            }
+            // Show the form again with the errors
+        } else {
+            $user = $this->userRepository->getCurrentUser();
+
+            if ($user) {
+                $data['name'] = $user->name;
+                $data['email'] = $user->email;
+                $data['wants_updates'] = $user->wantsUpdates;
+                $data['password'] = $passwordPlaceholder;
+                $data['picture'] = $user->profilePicture;
+            } else {
+                $message_title = 'Profile not found';
+                $message = 'Your profile could not be found. Please sign out of your account and try again to sign in!';
+            }
+            $data['csrf_token'] = SessionManager::getCsrfToken();
+        }
+
+        // Load the view
+        $this->render('user/profile', ['form_url' => URLROOT . '/UserController/profile', 'data' => $data, 'message_title' => $message_title, 'message' => $message]);
     }
 
     #endregion
@@ -293,9 +410,6 @@ class UserController extends Controller
         // Generate a verification token and send it to the user
         $user->isVerified = false;
         $user->verificationToken = $this->generateSalt();
-
-        // Save the user to the database
-        $this->userRepository->save($user);
 
         return $user;
     }

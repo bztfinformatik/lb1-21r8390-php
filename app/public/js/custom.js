@@ -1,4 +1,4 @@
-function uploadFile(file, uploadId, errorId) {
+function uploadFile(file, uploadId, imageId, errorId) {
 	if (file) {
 		console.log("Uploading file...");
 		const reader = new FileReader();
@@ -7,6 +7,7 @@ function uploadFile(file, uploadId, errorId) {
 			const base64 = reader.result;
 			console.debug("File content: " + base64);
 			document.getElementById(uploadId).value = base64;
+			document.getElementById(imageId).src = base64;
 		};
 		reader.onerror = (error) => {
 			console.error("File upload failed: " + error);

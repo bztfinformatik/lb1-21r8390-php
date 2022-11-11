@@ -12,6 +12,11 @@ class SessionManager
         return !empty($_SESSION['user_id']);
     }
 
+    public static function getCurrentUserId(): int
+    {
+        return $_SESSION['user_id'] ?? -1;
+    }
+
     /**
      * Saves the user credentials in the session
      *
@@ -60,7 +65,12 @@ class SessionManager
      */
     public static function isCSRFTokenValid(string $token): bool
     {
-        header($_SERVER['SERVER_PROTOCOL'] . ' 405 Method Not Allowed');
-        return $token === $_SESSION['csrf_token'];
+        $isValid = $token === ($_SESSION['csrf_token'] ?? '');
+        if (!$isValid) {
+            header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
+        }
+        // TODO: Validate the token
+        // Currently it's just for mocking purposes
+        return true;
     }
 }

@@ -38,13 +38,32 @@ class UserRepository extends BaseRepository
         return random_int(0, 1000000);
     }
 
+    public function getCurrentUser(): User|null
+    {
+        $user = $this->loadModel('User');
+
+        $user->id = 1;
+        $user->name = 'Test';
+        $user->email = 'test@example.com';
+        $user->wantsUpdates = true;
+        $user->salt = 'salt';
+        $user->password = password_hash($user->salt . '$' . 'Test123!Test123!', PASSWORD_DEFAULT);
+        $user->setRoles(array('admin', 'teacher', 'user'));
+        $user->profilePicture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII';
+        $user->isVerified = true;
+        $user->verificationCode = 'verificationCode';
+        $user->createdAt = '2020-01-01 00:00:00';
+
+        return $user;
+    }
+
     /**
      * Gets the user by the email
      *
      * @param string $email The email of the user
      * @return User The user
      */
-    public function getUserByEmail(string $email)
+    public function getUserByEmail(string $email): User|null
     {
         $this->logger->log("Getting the user by email '$email'", Logger::DEBUG);
 
@@ -58,7 +77,7 @@ class UserRepository extends BaseRepository
         if ($email === 'test@example.com') {
             $user = $this->loadModel('User');
 
-            $user->id = 1;
+            $user->id = -1;
             $user->name = 'Test';
             $user->email = 'test@example.com';
             $user->wantsUpdates = true;

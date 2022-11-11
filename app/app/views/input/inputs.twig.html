@@ -4,8 +4,7 @@
         <span class="label-text">{{ name|capitalize }}</span>
     </label>
 
-    <input type="{{ type }}" name="{{ name }}" value="{{ value|e }}" size="{{ size }}" placeholder="{{ caption }}"
-        class="input input-bordered input-sm w-full max-w-xs {% if error is not empty %} input-error {% endif %}" />
+    <input type="{{ type }}" name="{{ name }}" value="{{ value|e }}" size="{{ size }}" placeholder="{{ caption }}" class="input input-bordered input-sm w-full max-w-xs {% if error is not empty %} input-error {% endif %}" />
 
     {% if error is not empty %}
     <label class="label">
@@ -16,25 +15,36 @@
 {% endmacro %}
 
 {% macro upload_file(name, value, error, accept, size = 700000) %}
-{% set rand_id = random() %}
+{% set rand_id = random(5000, 6000) %}
 <div class="form-control w-full max-w-xs">
     <input id="upload_{{ rand_id }}" type="text" name="{{ name }}" value="{{ value|e }}" class="hidden" readonly />
 
-    <input id="upload_file_{{ rand_id }}" type="file" accept="{{ accept }}" size="{{ size }}" class="invisible"
-        onchange="uploadFile(this.files[0], 'upload_{{ rand_id }}', 'error_{{ rand_id }}')" />
+    <input id="upload_file_{{ rand_id }}" type="file" accept="{{ accept }}" size="{{ size }}" class="invisible" onchange="uploadFile(this.files[0], 'upload_{{ rand_id }}', 'upload_image_{{ rand_id }}', 'error_{{ rand_id }}')" />
 
     <div class="flex justify-center">
         <label for="upload_file_{{ rand_id }}">
-            {% if value is empty %}
-            <img alt="upload a file" src="/img/upload.svg" class="w-16" />
-            {% else %}
-            <img alt="user profile picture" src="{{ value|e }}" class="w-20 mask mask-circle" />
-            {% endif %}
+            <img id="upload_image_{{ rand_id }}" alt="upload a file" src="{{ value|e|default('/img/upload.svg') }}" class="h-20 mask mask-circle" />
         </label>
     </div>
 
     <label class="label text-center">
         <span id="error_{{ rand_id }}" class="leading-3 text-xs text-red-500">{{ error }}</span>
     </label>
+</div>
+{% endmacro %}
+
+{% macro toggle(text, name, value, tooltip = '') %}
+<div class="form-control">
+    {% if tooltip is empty %}
+    <span class="label-text">{{ text }}</span>
+    <input type="checkbox" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+    {% else %}
+    <div class="tooltip tooltip-bottom" data-tip="{{ tooltip }}">
+        <label class="label cursor-pointer">
+            <span class="label-text">{{ text }}</span>
+            <input type="checkbox" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+        </label>
+    </div>
+    {% endif %}
 </div>
 {% endmacro %}

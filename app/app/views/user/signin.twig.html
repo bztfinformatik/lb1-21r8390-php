@@ -22,8 +22,13 @@
                     {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
                     {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
 
+                    <div class="tooltip tooltip-bottom"
+                        data-tip="Stay calm! Think in silence and try again 😉 This feature will not work until emailing is implemented. ">
+                        <p class="underline underline-offset-4 pt-2">Forgot your password?</p>
+                    </div>
+
                     <div class="form-control mt-6">
-                        <button class="btn btn-primary">Sign In</button>
+                        <button type="submit" class="btn btn-primary">Sign In</button>
                     </div>
                 </form>
             </div>
