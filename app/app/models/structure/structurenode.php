@@ -3,10 +3,11 @@
 /**
  * This model represents a tree file structure. It is build like a `POPO`.
  */
-class StructureNode extends BaseModel
+class StructureNode
 {
     // Attributes
-    private string $name;
-    private array $children;
-    private NodeType $type;
+    public int $id;
+    public string $name;
+    public array $children;
+    public NodeType $type;
 }

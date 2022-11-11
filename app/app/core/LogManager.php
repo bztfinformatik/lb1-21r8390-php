@@ -1,7 +1,5 @@
 <?php
 
-require_once '/var/composer/vendor/autoload.php';
-
 use Monolog\Logger;
 use Monolog\Handler\SocketHandler;
 

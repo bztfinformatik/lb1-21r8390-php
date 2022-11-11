@@ -54,7 +54,7 @@ class App
     private function loadController(array &$url)
     {
         // Gets the controller name from the URL or shows the landing page
-        $controllerPath = isset($url[0]) ? $url[0] : $this->ERROR_CONTROLLER;
+        $controllerPath = $this->redirectController(isset($url[0]) ? $url[0] : $this->ERROR_CONTROLLER);
 
         // Checks if the controller exists and sets the controller
         if (file_exists('../app/controllers/' . $controllerPath . '.php')) {
@@ -73,6 +73,22 @@ class App
 
         // Create the controller
         $this->controller = new $controllerName;
+    }
+
+    /**
+     * Redirects a name to a different controller
+     *
+     * @param string $controllerName The name of the controller
+     * @return string The new name of the controller
+     */
+    private static function redirectController(string $controllerName): string
+    {
+        switch (strtolower($controllerName)) {
+            case 'login':
+                return 'UserController';
+            default:
+                return $controllerName;
+        }
     }
 
     /**

@@ -15,21 +15,25 @@
     <!-- Loading Tailwind CSS via CND is very bad! -->
     <link href="/css/daisyui.css" rel="stylesheet" type="text/css" />
     <link href="/css/styles.css" rel="stylesheet" type="text/css" />
-    <link rel="icon" href="/asset/favicon.ico">
+    <link rel="icon" href="/favicon.svg">
+
+    <!-- <meta http-equiv="refresh" content="6"> -->
 
     <script async src="/js/tailwindcss.js"></script>
-
-    <!-- <meta http-equiv="refresh" content="5"> -->
 
     <title>{{ title }}</title>
 </head>
 
 <body class="flex flex-col min-h-screen justify-between">
     <header>
+        {% if block('navlinks') is defined %}
         {% include('base/navbar.twig.html') with {navlinks: block('navlinks')} %}
+        {% else %}
+        {% include('base/navbar.twig.html') %}
+        {% endif %}
     </header>
 
-    <main role="main" class="mb-auto self-center">
+    <main role="main" class="self-center">
         <div class="container mx-auto px-4">
             {% block content %}
             {{ include('error/404.twig.html') }}
@@ -37,7 +41,11 @@
         </div>
     </main>
 
+    {% if wantFooter == true %}
     {{ include('base/footer.twig.html') }}
+    {% endif %}
+
+    <script async src="/js/custom.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,40 @@
+{% macro input_field(name, value, error, type = 'text', size = 20) %}
+<div class="form-control w-full max-w-xs">
+    <label class="label">
+        <span class="label-text">{{ name|capitalize }}</span>
+    </label>
+
+    <input type="{{ type }}" name="{{ name }}" value="{{ value|e }}" size="{{ size }}" placeholder="{{ caption }}"
+        class="input input-bordered input-sm w-full max-w-xs {% if error is not empty %} input-error {% endif %}" />
+
+    {% if error is not empty %}
+    <label class="label">
+        <span class="leading-3 text-xs text-red-500">{{ error }}</span>
+    </label>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro upload_file(name, value, error, accept, size = 700000) %}
+{% set rand_id = random() %}
+<div class="form-control w-full max-w-xs">
+    <input id="upload_{{ rand_id }}" type="text" name="{{ name }}" value="{{ value|e }}" class="hidden" readonly />
+
+    <input id="upload_file_{{ rand_id }}" type="file" accept="{{ accept }}" size="{{ size }}" class="invisible"
+        onchange="uploadFile(this.files[0], 'upload_{{ rand_id }}', 'error_{{ rand_id }}')" />
+
+    <div class="flex justify-center">
+        <label for="upload_file_{{ rand_id }}">
+            {% if value is empty %}
+            <img alt="upload a file" src="/img/upload.svg" class="w-16" />
+            {% else %}
+            <img alt="user profile picture" src="{{ value|e }}" class="w-20 mask mask-circle" />
+            {% endif %}
+        </label>
+    </div>
+
+    <label class="label text-center">
+        <span id="error_{{ rand_id }}" class="leading-3 text-xs text-red-500">{{ error }}</span>
+    </label>
+</div>
+{% endmacro %}

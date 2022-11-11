@@ -1,16 +1,8 @@
 {% extends "base/main.twig.html" %}
-
-{% block navlinks %}
-<a href="/login/singin" class="flex-0 btn btn-ghost px-2 text-base-content">Sign In</a>
-<a href="/login/signup" class="flex-0 btn btn-outline btn-ghost px-2 text-base-content">Sing Up</a>
-{% endblock %}
+{% set wantFooter = true %}
 
 {% block content %}
 <img class="h-80 max-h-full" alt="Could not find the page image" src="/img/404.svg">
 
-<p>The page <i class="text-lg">{{ notFoundPage|escape }}</i> could not be found</p>
-{% endblock %}
-
-{% block footer %}
-{{ include('base/footer.twig.html') }}
+<p>The page <em class="text-lg">{{ notFoundPage|escape }}</em> could not be found</p>
 {% endblock %}

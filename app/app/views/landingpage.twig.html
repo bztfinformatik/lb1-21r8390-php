@@ -1,12 +1,13 @@
 {% extends "base/main.twig.html" %}
+{% set wantFooter = true %}
 
 {% block navlinks %}
-<a href="/login/singin" class="flex-0 btn btn-ghost px-2 text-base-content">Sign In</a>
-<a href="/login/signup" class="flex-0 btn btn-outline btn-ghost px-2 text-base-content">Sing Up</a>
+<a href="/login/signIn" class="flex-0 btn btn-ghost px-2 text-base-content">Sign In</a>
+<a href="/login/signUp" class="flex-0 btn btn-outline btn-ghost px-2 text-base-content">Sing Up</a>
 {% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-2 gap-2 place-items-center p-5 mt-10">
+<div class="grid grid-cols-2 place-items-center px-5">
     <!-- title -->
     <h2 class="tracking-wider font-bold text-3xl pl-4 lg:text-5xl leading-relaxed col-span-2 sm:col-span-1">
         Configure
@@ -59,11 +60,9 @@
         <p class="text-lg">
             MkDocs is a static site generator that's geared towards building project documentation.
             Documentation built with MkDocs is hosted on GitHub Pages, which is a free service that allows you to host
-            your project's
-            documentation directly from a GitHub repository. In other words, you write documentation in Markdown, and
-            MkDocs builds the HTML files for you, and then you just push to GitHub.
+            your project's documentation directly from a GitHub repository. In other words, you write documentation in
+            Markdown, and MkDocs builds the HTML files for you, and then you just push to GitHub.
         </p>
     </div>
 </div>
-
 {% endblock %}

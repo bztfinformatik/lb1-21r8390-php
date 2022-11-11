@@ -1,7 +1,5 @@
 <?php
 
-require_once '/var/composer/vendor/autoload.php';
-
 use Monolog\Logger;
 use \Twig\Environment;
 use \Twig\Loader\FilesystemLoader;
@@ -49,21 +47,11 @@ class Controller
      * Loads a model from the models folder (`app/models`) and returns it
      *
      * @param string $model The model to load
-     * @return BaseModel The model that was loaded
+     * @return Model The model that was loaded
      */
     protected function loadModel(string $model)
     {
-        // Check if the model exists
-        if (file_exists('../app/models/' . $model . '.php')) {
-            // Load the model
-            $this->logger->log('Loading the model: ' . $model, Logger::INFO);
-            require_once '../app/models/' . $model . '.php';
-            // Instantiate the model
-            $model = resolveComponentName($model);
-            return new $model();
-        } else {
-            $this->logger->log('Model ' . $model . ' does not exists!', Logger::CRITICAL);
-        }
+        return loadModelHelper($model, $this->logger);
     }
 
     /**

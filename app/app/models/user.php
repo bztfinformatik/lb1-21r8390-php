@@ -3,17 +3,19 @@
 /**
  * Undocumented class
  */
-class User extends BaseModel
+class User
 {
     // Attributes
+    public int $id;
     public string $name;
     public string $email;
     public bool $wantsUpdates;
-    public string $password;
     public string $salt;
+    public string $password;
     private string $role;
     public string $profilePicture;
     public bool $isVerified;
+    public string $verificationCode;
     public $createdAt;
 
     /**

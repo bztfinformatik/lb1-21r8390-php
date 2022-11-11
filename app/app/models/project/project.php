@@ -5,9 +5,10 @@
  *
  * From this model, the project can be downloaded.
  */
-class Project extends BaseModel
+class Project
 {
     // Attributes
+    public int $id;
     public User $user;
 
     // General
