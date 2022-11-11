@@ -30,6 +30,11 @@ class UserController extends Controller
      */
     public function signIn()
     {
+        if (SessionManager::isLoggedIn()) {
+            redirect('dashboard', true);
+            return;
+        }
+
         // Init the form data
         $data = [
             'email' => '',          // From field data
@@ -37,8 +42,10 @@ class UserController extends Controller
             'password' => '',
             'password_err' => '',
         ];
+        $message = '';
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Check if the form was submitted or requested
+        if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
             // Sanitize POST data
             $data['email'] = $email = trim(htmlspecialchars($_POST['email']));
             $data['password'] = $password = trim($_POST['password']);
@@ -55,7 +62,7 @@ class UserController extends Controller
                     $data['email_err'] = $data['password_err'] = 'The email or password is incorrect';
                 } elseif (!$user->isVerified) {
                     // Check if the user is verified
-                    $data['email_err'] = 'The email is not verified';
+                    $message = 'The email is not verified';
                 } else {
                     // Save the credentials in the session
                     SessionManager::login($user);
@@ -75,7 +82,7 @@ class UserController extends Controller
         }
 
         // Load the view
-        $this->render('user/signin', ['urlroot' => URLROOT, 'data' => $data]);
+        $this->render('user/signin', ['urlroot' => URLROOT, 'data' => $data, 'message' => $message]);
     }
 
     /**
@@ -83,12 +90,17 @@ class UserController extends Controller
      */
     public function signUp()
     {
+        if (SessionManager::isLoggedIn()) {
+            redirect('dashboard', true);
+            return;
+        }
+
         // Init the form data
         $data = [
-            'name' => '',
-            'name_err' => '',
-            'email' => '',          // From field data
-            'email_err' => '',      // Field error message
+            'name' => '',       // From field data
+            'name_err' => '',   // Field error message
+            'email' => '',
+            'email_err' => '',
             'password' => '',
             'password_err' => '',
             'picture' => '',
@@ -96,6 +108,7 @@ class UserController extends Controller
         ];
         $message = '';
 
+        // Check if the form was submitted or requested
         if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
             // Sanitize POST data
             $data['name'] = $name = trim(htmlspecialchars($_POST['name']));
@@ -126,10 +139,9 @@ class UserController extends Controller
                     $data['email_err'] = 'The email is already registered';
                     $this->logger->log("Sign up for user '$email' failed!", Logger::INFO);
                 }
-            } else {
-                // Show the form again with the errors
-                $this->logger->log("Sign up for user '$email' failed!", Logger::INFO);
             }
+
+            // Show the form again with the errors
         }
 
         // Load the view

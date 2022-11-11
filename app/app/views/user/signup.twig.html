@@ -34,14 +34,16 @@
 </div>
 
 {% if message is not empty %}
-<div id="c883df47f2c03616c" class="modal modal-open">
+{% with %}
+{% set random_id = random(6000, 9000) %}
+<div id="{{ random_id }}" class="modal modal-open">
     <div class="modal-box relative">
         <label for="" class="btn btn-sm btn-circle absolute right-2 top-2"
-            onclick="document.getElementById('c883df47f2c03616c').remove()">✕</label>
-        <h3 class="text-lg font-bold">Information</h3>
+            onclick="document.getElementById('{{ random_id }}').remove()">✕</label>
+        <h3 class="text-lg font-bold">Next steps - Verification</h3>
         <p class="py-4">{{ message|nl2br }}</p>
     </div>
 </div>
+{% endwith %}
 {% endif %}
-
 {% endblock %}

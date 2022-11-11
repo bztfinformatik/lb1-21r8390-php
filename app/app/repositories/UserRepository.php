@@ -55,8 +55,22 @@ class UserRepository extends BaseRepository
         // - Log the result (if the user was found or not)
 
         // Mock user
-        if ($email == 'test@gmail.com') {
-            return $this->loadModel('User');
+        if ($email === 'test@example.com') {
+            $user = $this->loadModel('User');
+
+            $user->id = 1;
+            $user->name = 'Test';
+            $user->email = 'test@example.com';
+            $user->wantsUpdates = true;
+            $user->salt = 'salt';
+            $user->password = password_hash($user->salt . '$' . 'Test123!Test123!', PASSWORD_DEFAULT);
+            $user->setRoles(array('admin', 'teacher', 'user'));
+            $user->profilePicture = 'profilePicture';
+            $user->isVerified = true;
+            $user->verificationCode = 'verificationCode';
+            $user->createdAt = '2020-01-01 00:00:00';
+
+            return $user;
         }
         return null;
     }

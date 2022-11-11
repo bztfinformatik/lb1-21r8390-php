@@ -9,7 +9,7 @@ class SessionManager
      */
     public static function isLoggedIn(): bool
     {
-        return empty($_SESSION['user_id']);
+        return !empty($_SESSION['user_id']);
     }
 
     /**
