@@ -55,6 +55,38 @@ class Controller
     }
 
     /**
+     * Loads a enum from the models folder (`app/models`) and returns it
+     *
+     * @param string $enum The enum to load
+     * @param mixed $value The value to get from the enum
+     * @return Enum The enum that was loaded
+     */
+    protected function loadEnum(string $enum, $value)
+    {
+        return loadEnumHelper($enum, $value, $this->logger);
+    }
+
+    /**
+     * Loads a repository from the repositories folder (`app/repositories`) and returns it
+     *
+     * @param string $repository The repository to load
+     * @return Repository The repository that was loaded
+     */
+    protected function loadRepository(string $repository)
+    {
+        // Check if the model exists
+        if (file_exists('../app/repositories/' . $repository . '.php')) {
+            // Load the repository
+            $this->logger->log('Loading the repository: ' . $repository, Logger::INFO);
+            require_once '../app/repositories/' . $repository . '.php';
+            // Instantiate the repository
+            return new $repository();
+        } else {
+            $this->logger->log('Repository ' . $repository . ' does not exists!', Logger::CRITICAL);
+        }
+    }
+
+    /**
      * Render a view using Twig
      *
      * @param string $view The view to render
@@ -68,6 +100,8 @@ class Controller
         $path = $path . '.twig.html';
 
         $data['urlroot'] = URLROOT;
+        $data['isAdmin'] = SessionManager::hasRole($this->loadEnum('Role', 1));
+        $data['isSignedIn'] = SessionManager::isLoggedIn();
 
         // Render our view
         echo $this->twig->render($path, $data);

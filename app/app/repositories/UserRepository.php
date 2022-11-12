@@ -36,7 +36,7 @@ class UserRepository extends BaseRepository
         $user->wantsUpdates = true;
         $user->salt = 'salt';
         $user->password = password_hash($user->salt . '$' . 'Test123!Test123!', PASSWORD_DEFAULT);
-        $user->setRoles(array('admin', 'teacher', 'user'));
+        $user->setRoles(array($this->loadEnum('role', 0), $this->loadEnum('role', 1), $this->loadEnum('role', 2)));
         $user->profilePicture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII';
         $user->isVerified = true;
         $user->verificationCode = 'verificationCode';

@@ -43,4 +43,16 @@ class BaseRepository
     {
         return loadModelHelper($model, $this->logger);
     }
+
+    /**
+     * Loads a enum from the models folder (`app/models`) and returns it
+     *
+     * @param string $enum The enum to load
+     * @param mixed $value The value to get from the enum
+     * @return Enum The enum that was loaded
+     */
+    protected function loadEnum(string $enum, $value)
+    {
+        return loadEnumHelper($enum, $value, $this->logger);
+    }
 }

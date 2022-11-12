@@ -50,6 +50,28 @@ function loadModelHelper(string $model, LogManager $logger)
         $model = resolveComponentName($model);
         return new $model();
     } else {
-        $logger->log('Model ' . $model . ' does not exists!', Logger::CRITICAL);
+        $logger->log("Model '$model' does not exists!", Logger::CRITICAL);
+    }
+}
+
+/**
+ * Loads a enum from the models folder (`app/models`) and returns it
+ *
+ * @param string $enum The enum to load
+ * @param mixed $value The value to get from the enum
+ * @return Enum The enum that was loaded
+ */
+function loadEnumHelper(string $enum, $value, LogManager $logger)
+{
+    // Check if the enum exists
+    if (file_exists('../app/models/' . $enum . '.php')) {
+        // Load the enum
+        $logger->log("Loading the enum: '$enum' with value $value", Logger::INFO);
+        require_once '../app/models/' . $enum . '.php';
+        // Instantiate the enum with the value
+        $enum = resolveComponentName($enum);
+        return $enum::from($value);
+    } else {
+        $logger->log("Enum '$enum' does not exists!", Logger::CRITICAL);
     }
 }

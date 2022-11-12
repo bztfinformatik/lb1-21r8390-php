@@ -12,7 +12,7 @@ class Project
     public User $user;
 
     // General
-    public string $name;
+    public string $title;
     public string $description;
     public $createdAt;
     public $fromDate;

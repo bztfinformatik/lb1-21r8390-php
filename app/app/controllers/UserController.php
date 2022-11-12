@@ -1,7 +1,5 @@
 <?php
 
-require_once '../app/repositories/UserRepository.php';
-
 use Monolog\Logger;
 
 class UserController extends Controller
@@ -11,7 +9,7 @@ class UserController extends Controller
     public function __construct()
     {
         parent::__construct();
-        $this->userRepository = new UserRepository();
+        $this->userRepository = $this->loadRepository('UserRepository');
     }
 
     // --- Endpoints --- //
@@ -82,7 +80,11 @@ class UserController extends Controller
         }
 
         // Load the view
-        $this->render('user/signin', ['urlroot' => URLROOT . '/login/signIn', 'data' => $data, 'message' => $message]);
+        $this->render('user/signin', [
+            'urlroot' => URLROOT . '/login/signIn',
+            'data' => $data,
+            'message' => $message
+        ]);
     }
 
     /**
@@ -147,7 +149,12 @@ class UserController extends Controller
         }
 
         // Load the view
-        $this->render('user/signup', ['form_url' => URLROOT . '/login/signUp', 'data' => $data, 'message_title' => 'Next steps - Verification', 'message' => $message]);
+        $this->render('user/signup', [
+            'form_url' => URLROOT . '/login/signUp',
+            'data' => $data,
+            'message_title' => 'Next steps - Verification',
+            'message' => $message
+        ]);
     }
 
     /**
@@ -235,10 +242,6 @@ class UserController extends Controller
 
                     // Log that the user has logged in
                     $this->logger->log("User '$user->id' has successfully updated his profile", Logger::INFO);
-
-                    // Redirect to the dashboard
-                    redirect('dashboard', true);
-                    return;
                 } else {
                     $data['email_err'] = 'The email is already registered';
                     $this->logger->log("Profile update for user '$email' failed!", Logger::INFO);
