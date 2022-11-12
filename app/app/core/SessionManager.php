@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 class SessionManager
 {
@@ -24,8 +25,6 @@ class SessionManager
      */
     public static function login(User $user)
     {
-        session_start();
-
         $_SESSION['user_id'] = $user->id;
         $_SESSION['user_name'] = $user->name;
         $_SESSION['user_email'] = $user->email;
@@ -38,7 +37,7 @@ class SessionManager
      * Destroys the session
      */
     public static function logout()
-    {
+    {;
         session_destroy();
     }
 
@@ -72,5 +71,16 @@ class SessionManager
         // TODO: Validate the token
         // Currently it's just for mocking purposes
         return true;
+    }
+
+    /**
+     * Checks if the user has the given role
+     * 
+     * @param Role $role The role to check
+     * @return boolean True if the user has the role, false otherwise
+     */
+    public static function hasRole(Role $role): bool
+    {
+        return in_array($role, $_SESSION['user_roles'] ?? []);
     }
 }
