@@ -20,20 +20,8 @@ class UserRepository extends BaseRepository
     {
         $this->logger->log("Saving user '$user->email' to the database", Logger::INFO);
 
-        // $this->db->query('INSERT INTO users (name, email, wantsUpdates, salt, password, role, profilePicture, isVerified, verificationCode, createdAt) VALUES (:name, :email, :wantsUpdates, :salt, :password, :role, :profilePicture, :isVerified, :verificationCode, :createdAt)');
-        // $this->db->bind(':name', $user->name);
-        // $this->db->bind(':email', $user->email);
-        // $this->db->bind(':wantsUpdates', $user->wantsUpdates);
-        // $this->db->bind(':salt', $user->salt);
-        // $this->db->bind(':password', $user->password);
-        // $this->db->bind(':role', $user->role);
-        // $this->db->bind(':profilePicture', $user->profilePicture);
-        // $this->db->bind(':isVerified', $user->isVerified);
-        // $this->db->bind(':verificationCode', $user->verificationCode);
-        // $this->db->bind(':createdAt', $user->createdAt);
-        // $this->db->execute();
-        // return $this->db->lastInsertId();
-
+        // TODO Save the user to the database
+        // Currently only mocked
 
         return random_int(0, 1000000);
     }

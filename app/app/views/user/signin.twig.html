@@ -12,7 +12,7 @@
 
 <div class="hero">
     <div class="hero-content flex-col md:flex-row-reverse">
-        <img alt="signIn form with fields illustration" src="/img/signIn.svg" class="h-full max-w-sm hidden md:block" />
+        <img alt="signIn form with fields illustration" src="/img/signIn.svg" class="h-full max-w-sm hidden md:block lg:hover:scale-125 transition-all duration-700" />
         <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
             <div class="card-body">
                 <form action="{{ form_url }}" method="post" enctype="multipart/form-data">
@@ -22,8 +22,7 @@
                     {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
                     {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
 
-                    <div class="tooltip tooltip-bottom"
-                        data-tip="Stay calm! Think in silence and try again 😉 This feature will not work until emailing is implemented. ">
+                    <div class="tooltip tooltip-bottom" data-tip="Stay calm! Think in silence and try again 😉 This feature will not work until emailing is implemented. ">
                         <p class="underline underline-offset-4 pt-2">Forgot your password?</p>
                     </div>
 
@@ -41,8 +40,7 @@
 {% set random_id = random(6000, 9000) %}
 <div id="{{ random_id }}" class="modal modal-open">
     <div class="modal-box relative">
-        <label for="" class="btn btn-sm btn-circle absolute right-2 top-2"
-            onclick="document.getElementById('{{ random_id }}').remove()">✕</label>
+        <label for="" class="btn btn-sm btn-circle absolute right-2 top-2" onclick="document.getElementById('{{ random_id }}').remove()">✕</label>
         <h3 class="text-lg font-bold">Verification error</h3>
         <p class="py-4">{{ message|nl2br }}</p>
     </div>
