@@ -16,6 +16,8 @@ class UserController extends Controller
     #region Endpoints
 
     /**
+     * There is no default action
+     * 
      * Redirects to the login page
      */
     public function index()
@@ -185,6 +187,7 @@ class UserController extends Controller
         $message_title = '';
         $message = '';
 
+        // Do not show the real password in the form!
         $passwordPlaceholder = 'The real password is not shown here!';
 
         // Check if the form was submitted or requested
@@ -227,6 +230,7 @@ class UserController extends Controller
                         $user->verificationToken = $this->generateSalt();
                     }
 
+                    // Update the user
                     $user->name = $name;
                     $user->email = $email;
                     $user->wantsUpdates = $wantsUpdates;
@@ -238,6 +242,7 @@ class UserController extends Controller
                     }
                     $user->picture = $picture;
 
+                    // Save the updates to the database
                     $this->userRepository->save($user);
                     SessionManager::login($user);
 

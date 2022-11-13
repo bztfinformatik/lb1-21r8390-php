@@ -28,6 +28,19 @@ class ProjectRepository extends BaseRepository
     }
 
     /**
+     * Deletes a project from the database
+     *
+     * @param int $projectId The ID of the project
+     */
+    public function delete(int $projectId)
+    {
+        $this->logger->log("Deleting project with ID '$projectId' from the database", Logger::INFO);
+
+        // TODO Delete the project from the database
+        // Currently only mocked
+    }
+
+    /**
      * Returns all projects from a user
      *
      * @param integer $userId The ID of the user
@@ -43,6 +56,19 @@ class ProjectRepository extends BaseRepository
         }
 
         return $projects;
+    }
+
+    /**
+     * Returns a project by its ID
+     *
+     * @param integer $projectId The ID of the project
+     * @return Project The project with the given ID
+     */
+    public function getById(int $projectId): Project
+    {
+        $this->logger->log("Getting project with ID '$projectId' from the database", Logger::DEBUG);
+
+        return $this->generateFakeProject();
     }
 
     /**
