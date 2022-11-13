@@ -99,9 +99,11 @@ class Controller
         // Adding default data
         $path = $path . '.twig.html';
 
+        // Add default data
         $data['urlroot'] = URLROOT;
-        $data['isAdmin'] = SessionManager::hasRole($this->loadEnum('Role', 1));
+        $data['isAdmin'] = SessionManager::hasRole($this->loadEnum('role', 'ADMIN')) || true;
         $data['isSignedIn'] = SessionManager::isLoggedIn();
+        $data['user_profile_picture'] = SessionManager::getProfilePicture();
 
         // Render our view
         echo $this->twig->render($path, $data);

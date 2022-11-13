@@ -15,6 +15,7 @@ class UserRepository extends BaseRepository
      * Saves the user to the database
      *
      * @param User $user The user to save
+     * @return integer The ID of the saved user
      */
     public function save(User $user): int
     {
@@ -22,22 +23,31 @@ class UserRepository extends BaseRepository
 
         // TODO Save the user to the database
         // Currently only mocked
+        $isLoggedIn = SessionManager::isLoggedIn();
+        SessionManager::login($user);
+        if (!$isLoggedIn) {
+            SessionManager::logout();
+        }
 
         return random_int(0, 1000000);
     }
 
+    /**
+     * Returns the current user
+     */
     public function getCurrentUser(): User|null
     {
         $user = $this->loadModel('User');
 
-        $user->id = 1;
-        $user->name = 'Test';
-        $user->email = 'test@example.com';
-        $user->wantsUpdates = true;
+        // Mocking the current user
+        $user->id = $_SESSION['user_id'];
+        $user->name = $_SESSION['user_name'];
+        $user->email = $_SESSION['user_email'];
+        $user->wantsUpdates = $_SESSION['user_wants_updates'];
         $user->salt = 'salt';
         $user->password = password_hash($user->salt . '$' . 'Test123!Test123!', PASSWORD_DEFAULT);
-        $user->setRoles(array($this->loadEnum('role', 0), $this->loadEnum('role', 1), $this->loadEnum('role', 2)));
-        $user->profilePicture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII';
+        $user->roles = $_SESSION['user_roles'];
+        $user->profilePicture = $_SESSION['user_profile_picture'];
         $user->isVerified = true;
         $user->verificationCode = 'verificationCode';
         $user->createdAt = '2020-01-01 00:00:00';
@@ -72,7 +82,7 @@ class UserRepository extends BaseRepository
             $user->salt = 'salt';
             $user->password = password_hash($user->salt . '$' . 'Test123!Test123!', PASSWORD_DEFAULT);
             $user->setRoles(array('admin', 'teacher', 'user'));
-            $user->profilePicture = 'profilePicture';
+            $user->profilePicture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII';
             $user->isVerified = true;
             $user->verificationCode = 'verificationCode';
             $user->createdAt = '2020-01-01 00:00:00';

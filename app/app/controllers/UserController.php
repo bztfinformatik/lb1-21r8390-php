@@ -162,12 +162,12 @@ class UserController extends Controller
      */
     public function profile()
     {
-        // Check if the user is logged in
-        // TODO: Make session manager working
-        // if (!SessionManager::isLoggedIn()) {
-        //     redirect('login/signin', true);
-        //     return;
-        // }
+
+        // Only logged in users can access this page
+        if (!SessionManager::isLoggedIn()) {
+            redirect('login/signin', true);
+            return;
+        }
 
         // Init the form data
         $data = [
@@ -239,10 +239,11 @@ class UserController extends Controller
                     $user->picture = $picture;
 
                     $this->userRepository->save($user);
+                    SessionManager::login($user);
 
                     // Log that the user has logged in
                     $this->logger->log("User '$user->id' has successfully updated his profile", Logger::INFO);
-                } else {
+                } elseif ($user) {
                     $data['email_err'] = 'The email is already registered';
                     $this->logger->log("Profile update for user '$email' failed!", Logger::INFO);
                 }
@@ -261,11 +262,19 @@ class UserController extends Controller
                 $message_title = 'Profile not found';
                 $message = 'Your profile could not be found. Please sign out of your account and try again to sign in!';
             }
-            $data['csrf_token'] = SessionManager::getCsrfToken();
         }
+
+        // Set the CSRF token
+        $data['csrf_token'] = SessionManager::getCsrfToken();
 
         // Load the view
         $this->render('user/profile', ['form_url' => URLROOT . '/UserController/profile', 'data' => $data, 'message_title' => $message_title, 'message' => $message]);
+    }
+
+    public function logout()
+    {
+        SessionManager::logout();
+        redirect('', true);
     }
 
     #endregion
@@ -400,10 +409,11 @@ class UserController extends Controller
         $user = $this->loadModel('User');
 
         // Fill the model with the data
+        $user->id = -1;
         $user->name = $name;
         $user->email = $email;
         $user->wantsUpdates = true;
-        $user->setRoles(array());
+        $user->setRoles(array($this->loadEnum('role', 'USER')));
         $user->profilePicture = $profilePicture;
 
         // Generate a salt and hash the password

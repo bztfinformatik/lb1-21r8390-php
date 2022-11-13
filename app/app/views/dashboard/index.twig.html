@@ -1,0 +1,87 @@
+{% extends "base/main.twig.html" %}
+
+{% import "input/inputs.twig.html" as inputs %}
+{% import "input/message.twig.html" as message %}
+
+{% block navlinks %}
+<a href="/ProjectController/create" class="btn btn-ghost btn-circle">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+        <path fill-rule="evenodd" d="M11.75 4.5a.75.75 0 01.75.75V11h5.75a.75.75 0 010 1.5H12.5v5.75a.75.75 0 01-1.5 0V12.5H5.25a.75.75 0 010-1.5H11V5.25a.75.75 0 01.75-.75z"></path>
+    </svg>
+</a>
+<div class="dropdown dropdown-end">
+    <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+        <div class="w-10 rounded-full">
+            <img src="{{ user_profile_picture }}" />
+        </div>
+    </label>
+    <ul tabindex="0" class="text-primary mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52">
+        <li><a href="/UserController/profile">Profile</a></li>
+        {% if isAdmin %}
+        <li><a href="/kibana">Kibana</a></li>
+        {% endif %}
+        <li><a href="/UserController/logout">Logout</a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="bg-primary/25 mx-16 my-10 p-5 rounded-md gap-4">
+
+    {% for project in projects %}
+    <div class="p-2 rounded-md hover:bg-primary/50 grid gap-1">
+        <div class="flex justify-between">
+            <h3 class="text-xl font-bold">{{ project.title|title }}</h3>
+            <div class="pl-5"></div>
+            <div class="btn-group">
+                <a href="/ProjectController/edit/{{ project.id }}" class="btn btn-sm btn-active fill-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+                        <path fill-rule="evenodd" d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25a1.75 1.75 0 01.445-.758l8.61-8.61zm1.414 1.06a.25.25 0 00-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 000-.354l-1.086-1.086zM11.189 6.25L9.75 4.81l-6.286 6.287a.25.25 0 00-.064.108l-.558 1.953 1.953-.558a.249.249 0 00.108-.064l6.286-6.286z"></path>
+                    </svg>
+                </a>
+                {% if project.status.name == 'ACCEPTED' %}
+                <a href="{{ project.downloadUrl }}" class="btn btn-sm fill-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M4.97 11.03a.75.75 0 111.06-1.06L11 14.94V2.75a.75.75 0 011.5 0v12.19l4.97-4.97a.75.75 0 111.06 1.06l-6.25 6.25a.75.75 0 01-1.06 0l-6.25-6.25zm-.22 9.47a.75.75 0 000 1.5h14.5a.75.75 0 000-1.5H4.75z"></path>
+                    </svg>
+                </a>
+                {% endif %}
+                <a href="/ProjectController/edit/{{ project.id }}" class="btn btn-sm fill-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                        <path fill-rule="evenodd" d="M16 1.75V3h5.25a.75.75 0 010 1.5H2.75a.75.75 0 010-1.5H8V1.75C8 .784 8.784 0 9.75 0h4.5C15.216 0 16 .784 16 1.75zm-6.5 0a.25.25 0 01.25-.25h4.5a.25.25 0 01.25.25V3h-5V1.75z"></path>
+                        <path d="M4.997 6.178a.75.75 0 10-1.493.144L4.916 20.92a1.75 1.75 0 001.742 1.58h10.684a1.75 1.75 0 001.742-1.581l1.413-14.597a.75.75 0 00-1.494-.144l-1.412 14.596a.25.25 0 01-.249.226H6.658a.25.25 0 01-.249-.226L4.997 6.178z"></path>
+                        <path d="M9.206 7.501a.75.75 0 01.793.705l.5 8.5A.75.75 0 119 16.794l-.5-8.5a.75.75 0 01.705-.793zm6.293.793A.75.75 0 1014 8.206l-.5 8.5a.75.75 0 001.498.088l.5-8.5z"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <p>{{ project.description }}</p>
+
+        {% if project.status.name == 'IN_PROGRESS' %}
+        <div class="badge badge-info gap-2">
+            in progress
+        </div>
+        {% elseif project.status.name == 'ACCEPTED' %}
+        <div class="badge badge-success gap-2">
+            accepted
+        </div>
+        {% elseif project.status.name == 'REJECTED' %}
+        <div class="badge badge-error gap-2">
+            rejected
+        </div>
+        {% endif %}
+    </div>
+
+    {% if loop.last == false %}
+    <hr class="border-t-2 border-primary/50 my-1">
+    {% endif %}
+
+    {% else %}
+    <p>Create a new project via the <em class="text-lg">plus</em> in the navigation bar</p>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

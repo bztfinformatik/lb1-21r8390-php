@@ -64,13 +64,14 @@ class SessionManager
      */
     public static function isCSRFTokenValid(string $token): bool
     {
+        // Check if the token is valid
         $isValid = $token === ($_SESSION['csrf_token'] ?? '');
         if (!$isValid) {
+            // Return a 403 Forbidden response
             header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
         }
-        // TODO: Validate the token
-        // Currently it's just for mocking purposes
-        return true;
+        // Return the result
+        return $isValid;
     }
 
     /**
@@ -79,8 +80,18 @@ class SessionManager
      * @param Role $role The role to check
      * @return boolean True if the user has the role, false otherwise
      */
-    public static function hasRole(Role $role): bool
+    public static function hasRole($role): bool
     {
         return in_array($role, $_SESSION['user_roles'] ?? []);
+    }
+
+    /**
+     * Returns the profile picture of the current user
+     *
+     * @return string The profile picture of the current user
+     */
+    public static function getProfilePicture(): string
+    {
+        return $_SESSION['user_profile_picture'] ?? '';
     }
 }
