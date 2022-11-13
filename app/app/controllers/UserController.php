@@ -363,7 +363,7 @@ class UserController extends Controller
         if (empty($name)) {
             $error = 'The name is required';
         } elseif (strlen($name) < 2 || strlen($name) > 50) {
-            $error = 'The name must be between 2 and 50 characters';
+            $error = 'The name must be between 2 and 50 characters long';
         }
 
         // Return the error message if there is one

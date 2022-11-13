@@ -84,6 +84,7 @@ function loadEnumHelper(string $enum, $value, LogManager $logger)
             }
         }
         $logger->log("Could not find the enum '$enum' with value $value", Logger::WARNING);
+        return null;
     } else {
         $logger->log("Enum '$enum' does not exists!", Logger::CRITICAL);
     }

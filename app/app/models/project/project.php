@@ -34,7 +34,6 @@ class Project
     public bool $wantCopyright;
     public bool $wantSearch;
     public bool $wantTags;
-    public array $footerLinks;
     public string $logo;
 
     // Folder structure
@@ -48,4 +47,9 @@ class Project
     public string $comment;
     public Status $status;
     public string $downloadUrl;
+
+    public function isInProgress(): bool
+    {
+        return $this->status === Status::IN_PROGRESS;
+    }
 }

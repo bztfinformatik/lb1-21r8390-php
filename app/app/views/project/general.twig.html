@@ -1,0 +1,18 @@
+{% import "input/inputs.twig.html" as inputs %}
+
+<div class="col-span-4 sm:col-span-2">
+    {{ inputs.input_field('title', data.title, data.title_err, 'text', 60) }}
+</div>
+{{ inputs.input_field('from', data.from|date("Y-m-d"), data.date_err, 'date') }}
+{{ inputs.input_field('to', data.to|date("Y-m-d"), data.date_err, 'date') }}
+
+<div class="col-span-4">
+    {{ inputs.textarea('description', data.description, data.description_err, 3, 255) }}
+</div>
+
+<div class="col-span-4">
+    {{ inputs.input_field('repo_docs', data.repo_docs, data.repo_docs_err, 'text', 60, 'Documentation Repository') }}
+</div>
+<div class="col-span-4">
+    {{ inputs.input_field('repo_code', data.repo_code, data.repo_code_err, 'text', 60, 'Soruce Code Repository') }}
+</div>

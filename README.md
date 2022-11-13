@@ -39,3 +39,4 @@ Falls die Konfiguration mit dem ELK-Stack nicht funktioniert, kann auch das Logg
 
 -   Datenbank
 -   Emails
+-   Download

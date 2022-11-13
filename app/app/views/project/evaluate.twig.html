@@ -1,0 +1,8 @@
+{% import "input/inputs.twig.html" as inputs %}
+
+<div class="col-span-4">
+    {{ inputs.textarea('comment', data.comment, data.comment_err, 9, 255) }}
+</div>
+<div class="col-span-4 sm:col-span-2">
+    {{ inputs.select('status', data.status, data.status_options, data.status_err) }}
+</div>

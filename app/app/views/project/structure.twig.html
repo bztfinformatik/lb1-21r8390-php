@@ -1,0 +1,12 @@
+{% import "input/inputs.twig.html" as inputs %}
+
+<div class="col-span-2">
+    {{ inputs.toggle('Journal', 'wantJournal', data.wantJournal, 'Would you like to write a weekly journal?') }}
+</div>
+<div class="col-span-2">
+    {{ inputs.toggle('Examples', 'wantExamples', data.wantExamples, 'Do you want a page that shows all possible MkDocs components?') }}
+</div>
+
+<div class="col-span-4">
+    {{ inputs.textarea('structure', data.structure, data.structure_err, 6, 10000) }}
+</div>

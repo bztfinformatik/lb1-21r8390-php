@@ -106,7 +106,6 @@ class ProjectRepository extends BaseRepository
         $project->wantCopyright = (bool)random_int(0, 1);
         $project->wantSearch = (bool)random_int(0, 1);
         $project->wantTags = (bool)random_int(0, 1);
-        $project->footerLinks = array();
         $project->logo = 'https://picsum.photos/200/300/?blur';
 
         // Folder structure
@@ -116,6 +115,7 @@ class ProjectRepository extends BaseRepository
 
         // Confirmation
         $project->status = $this->loadEnum('project/status', random_int(0, 2));
+        $project->comment = str_repeat('Lorem ipsum ', random_int(1, 20));
 
         return $project;
     }
