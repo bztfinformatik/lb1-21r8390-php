@@ -44,6 +44,6 @@ class Dashboard extends Controller
         $lastSlashIndex = strrpos(URLROOT, ':');
 
         // Redirect to the Kibana dashboard
-        header('location: ' . substr(URLROOT, 0, $lastSlashIndex) . ':12345/', 308);
+        header('location: ' . substr(URLROOT, 0, $lastSlashIndex + 1) . KIBANA_PORT, 308);
     }
 }
