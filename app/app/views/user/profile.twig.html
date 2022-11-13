@@ -4,7 +4,25 @@
 {% import "input/message.twig.html" as message %}
 
 {% block navlinks %}
-
+<a href="/ProjectController/create" class="btn btn-ghost btn-circle">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+        <path fill-rule="evenodd" d="M11.75 4.5a.75.75 0 01.75.75V11h5.75a.75.75 0 010 1.5H12.5v5.75a.75.75 0 01-1.5 0V12.5H5.25a.75.75 0 010-1.5H11V5.25a.75.75 0 01.75-.75z"></path>
+    </svg>
+</a>
+<div class="dropdown dropdown-end">
+    <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+        <div class="w-10 rounded-full">
+            <img src="{{ user_profile_picture }}" />
+        </div>
+    </label>
+    <ul tabindex="0" class="text-primary mt-3 p-2 shadow menu menu-compact dropdown-content bg-base-100 rounded-box w-52">
+        <li><a href="/">Dashboard</a></li>
+        {% if isAdmin %}
+        <li><a href="/kibana">Kibana</a></li>
+        {% endif %}
+        <li><a href="/UserController/logout">Logout</a></li>
+    </ul>
+</div>
 {% endblock %}
 
 {% block content %}
