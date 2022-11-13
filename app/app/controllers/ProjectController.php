@@ -49,6 +49,11 @@ class ProjectController extends Controller
      */
     public function create(int $currentStep = 0)
     {
+        // The url where the form is submitted to
+        $formUrl = URLROOT . "/" . $this::class . '/create/';
+
+        // Show the view
+        $this->projectView($formUrl, $currentStep, null, 3);
     }
 
     /**
@@ -56,16 +61,10 @@ class ProjectController extends Controller
      *
      * @param int $projectId The ID of the project
      * @param int $currentStep The current step of the creation process
+     * @param int $maxPage The maximum page of the process
      */
     public function edit(int $projectId, int $currentStep = 0)
     {
-        // Init form data
-        $message = [
-            'title' => '',
-            'text' => '',
-        ];
-        $data = array();
-
         // Get the project from the database
         $project = $this->projectRepository->getById($projectId);
 
@@ -75,34 +74,71 @@ class ProjectController extends Controller
             return;
         }
 
+        // The url where the form is submitted to
+        $formUrl = URLROOT . "/" . $this::class . '/edit/' . $projectId . '/';
+
+        // Show the view
+        $this->projectView($formUrl, $currentStep, $project, 4);
+    }
+
+    /**
+     * Shows the project view
+     *
+     * @param string $formUrl The url where the form is submitted to
+     * @param integer $currentStep The current step of the creation process
+     * @param Project|null $project The project to edit
+     * @param integer $maxPage The maximum page of the process
+     */
+    public function projectView(string $formUrl, int $currentStep, Project|null $project, int $maxPage)
+    {
+        // Init form data
+        $message = [
+            'title' => '',
+            'text' => '',
+        ];
+        $data = array();
+
+        $isPost = strtoupper($_SERVER['REQUEST_METHOD']) == 'POST';
+
         // Check CSRF token
         if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST' && !SessionManager::isCSRFTokenValid($_POST['csrf_token'])) {
             $this->logger->log('CSRF token of user ' . SessionManager::getCurrentUserId() . ' is invalid', Logger::WARNING);
             $message['title'] = 'The CSRF token is invalid';
             $message['text'] = 'Your request seems to be faulty. Please refresh the page and try again!';
         } else {
-            $data = array_merge($data, $this->generalPage($project));
-            $data = array_merge($data, $this->appearencePage($project));
-            $data = array_merge($data, $this->structurePage($project));
-            $data = array_merge($data, $this->evaluationPage($project));
+            // Merge all request together
+            $data = array_merge($data, $this->generalPage($project, $isPost && $currentStep >= 0));
+            $data = array_merge($data, $this->appearencePage($project, $isPost && $currentStep >= 1));
+            $data = array_merge($data, $this->structurePage($project, $isPost && $currentStep >= 2));
+            $data = array_merge($data, $this->evaluationPage($project, $isPost && $currentStep >= 3));
 
             // Only admins can confirm projects
             // Confirmed or rejected projects can view the confirmation page
             // if (SessionManager::hasRole($this->loadEnum('role', 'admin')) || !$project->isInProgress()) {
 
-            if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+            if ($isPost) {
+                // Check if there are any errors
                 $hasErrors = false;
                 foreach ($data as $key => $value) {
                     if (str_ends_with($key, '_err') && $value != '') {
+                        $this->logger->log('The project could not be saved because of an error in the ' . $key . ' field', Logger::WARNING);
+                        echo $key . ' ' . $value;
                         $hasErrors = true;
                         break;
                     }
                 }
+
+                // Do not go to next page if there are errors
                 if (!$hasErrors) {
                     $currentStep++;
                 }
 
-                if ($currentStep >= 4) {
+                // Has reached last page
+                if ($currentStep >= $maxPage) {
+                    // Save the project
+                    if ($project === null) {
+                        $project = $this->loadModel('project/project');
+                    }
                     $this->projectRepository->save($project);
                     redirect('', true);
                     return;
@@ -115,8 +151,8 @@ class ProjectController extends Controller
 
         // Render the view
         $this->render('project/base', [
-            'form_url' => URLROOT . "/" . $this::class . '/edit/' . $projectId . '/',
-            'progress' => ($currentStep + 1) * 25,
+            'form_url' => $formUrl,
+            'progress' => ($currentStep + 1) * (100.0 / (float)$maxPage),
             'message' => $message,
             'currentPage' => $currentStep,
             'data' => $data,
@@ -130,9 +166,10 @@ class ProjectController extends Controller
      * Shows the general page
      * 
      * @param Project $project The project to edit
+     * @param boolean $isPost Whether the form was submitted
      * @return array The data to pass to the view
      */
-    public function generalPage(Project $project = null): array
+    public function generalPage(Project $project = null, bool $isPost): array
     {
         // Init the form data
         $data = [
@@ -155,7 +192,7 @@ class ProjectController extends Controller
         ];
 
         // Check if the form was submitted or requested
-        if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+        if ($isPost) {
             // Sanitize POST data
             $data['title'] = $title = trim(htmlspecialchars($_POST['title']));
             $data['description'] = $description = trim(htmlspecialchars($_POST['description']));
@@ -204,9 +241,10 @@ class ProjectController extends Controller
      * Shows the appearence page
      *
      * @param Project $project The project to edit
+     * @param boolean $isPost Whether the form was submitted
      * @return array The data to pass to the view
      */
-    public function appearencePage(Project $project = null): array
+    public function appearencePage(Project $project = null, bool $isPost): array
     {
         // Init the form data
         $data = [
@@ -225,7 +263,7 @@ class ProjectController extends Controller
         ];
 
         // Check if the form was submitted or requested
-        if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+        if ($isPost) {
             // Sanitize POST data
             $data['color'] = $color = trim(htmlspecialchars($_POST['color']));
             $data['font'] = $font = trim(htmlspecialchars($_POST['font']));
@@ -260,9 +298,10 @@ class ProjectController extends Controller
      * Shows the structure page
      *
      * @param Project $project The project to edit
+     * @param boolean $isPost Whether the form was submitted
      * @return array The data to pass to the view
      */
-    public function structurePage(Project $project = null): array
+    public function structurePage(Project $project = null, bool $isPost): array
     {
         // Init the form data
         $defaultJson = '{ "docs": { "css": "folder", "mkdocs.yml": "file"}}';
@@ -275,7 +314,7 @@ class ProjectController extends Controller
         ];
 
         // Check if the form was submitted or requested
-        if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+        if ($isPost) {
             $data['wantJournal'] = filter_has_var(INPUT_POST, 'wantDarkMode');
             $data['wantExamples'] = filter_has_var(INPUT_POST, 'wantCopyright');
             $data['structure'] = $structure = trim($_POST['structure']);
@@ -294,7 +333,14 @@ class ProjectController extends Controller
         return $data;
     }
 
-    public function evaluationPage(Project $project = null): array
+    /**
+     * Shows the evaluation page
+     *
+     * @param Project $project The project to edit
+     * @param boolean $isPost Whether the form was submitted
+     * @return array The data to pass to the view
+     */
+    public function evaluationPage(Project $project = null, bool $isPost): array
     {
         $data = [
             'comment' => '',
@@ -305,7 +351,7 @@ class ProjectController extends Controller
         ];
 
         // Check if the form was submitted or requested
-        if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+        if ($isPost) {
             $data['comment'] = $comment = trim(htmlspecialchars($_POST['comment']));
             $data['status'] = $status = trim(htmlspecialchars($_POST['status']));
 

@@ -19,7 +19,9 @@ class ProjectRepository extends BaseRepository
      */
     public function save(Project $project): int
     {
-        $this->logger->log("Saving project '$project->title' to the database", Logger::INFO);
+        if (isset($project)) {
+            $this->logger->log("Saving project '$project->title' to the database", Logger::INFO);
+        }
 
         // TODO Save the project to the database
         // Currently only mocked
