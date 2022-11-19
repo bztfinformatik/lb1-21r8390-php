@@ -6,9 +6,11 @@ volumes:
     app:
 
 networks:
+    public:
+        driver: bridge
     elk:
         driver: bridge
-    backend:
+    database:
         driver: bridge
 
 services:
@@ -16,12 +18,14 @@ services:
         build: ./php
         ports:
             - ${PHP_PORT}:80
+        restart: unless-stopped
         depends_on:
             - logstash
-        restart: unless-stopped
+            - mariadb
         networks:
+            - public
             - elk
-            - backend
+            - database
         volumes:
             - ./app:/var/www/html
         environment:
@@ -37,6 +41,7 @@ services:
 
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+        restart: unless-stopped
         networks:
             - elk
         environment:
@@ -51,7 +56,7 @@ services:
                 soft: -1
                 hard: -1
         healthcheck:
-            test: curl --fail -s http://elasticsearch:9200 || exit 1
+            test: curl --fail -s ${ELASTICSEARCH_URL} || exit 1
             interval: 30s
             timeout: 10s
             retries: 50
@@ -59,17 +64,21 @@ services:
     logstash:
         image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
         restart: unless-stopped
-        environment:
-            LS_JAVA_OPTS: "-Xms500m -Xmx500m -XX:ParallelGCThreads=1"
-        mem_limit: ${MEM_LIMIT}
-        volumes:
-            - "./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml"
-            - "./logstash/logstash.conf:/usr/share/logstash/config/logstash_simple.conf"
         depends_on:
             elasticsearch:
                 condition: service_healthy
         networks:
             - elk
+        volumes:
+            - "./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml"
+            - "./logstash/logstash.conf:/usr/share/logstash/config/logstash_simple.conf"
+            - "./logstash/logs:/usr/share/logstash/logs"
+        environment:
+            LS_JAVA_OPTS: "-Xms500m -Xmx500m -XX:ParallelGCThreads=1"
+            ELASTICSEARCH_HOST: ${ELASTICSEARCH_URL}
+            ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD}
+            IS_LOGGING: ${IS_LOGGING}
+        mem_limit: ${MEM_LIMIT}
         entrypoint:
             - logstash
             - -f
@@ -77,17 +86,18 @@ services:
 
     kibana:
         image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-        restart: unless-stopped
         ports:
             - ${KIBANA_PORT}:5601
+        restart: unless-stopped
         depends_on:
             - php
             - elasticsearch
         networks:
+            - public
             - elk
         environment:
             - SERVERNAME=kibana
-            - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+            - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_URL}
             - ELASTICSEARCH_USERNAME=kibana_system
             - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
         mem_limit: ${MEM_LIMIT}
@@ -102,21 +112,28 @@ services:
             start_period: 30s
             retries: 120
 
-    # mysql:
-    #     image: mysql:8
-    #     ports:
-    #         - 3306:3306
-    #     command: --default-authentication-plugin=mysql_native_password
-    #     environment:
-    #         MYSQL_ROOT_PASSWORD: root
-    #         MYSQL_USER: user
-    #         MYSQL_PASSWORD: userpass
-    #         MYSQL_DATABASE: testdb
-    #     volumes:
-    #         - ./mysql/initscripts:/docker-entrypoint-initdb.d
-    #         - ./mysql/mysqldata:/var/lib/mysql/
+    mariadb:
+        image: mariadb
+        restart: unless-stopped
+        networks:
+            - database
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        volumes:
+            - ./mariadb/initscripts:/docker-entrypoint-initdb.d
+            - ./mariadb/sysdata:/var/lib/mysql/
 
     # adminer:
     #     image: adminer
+    #     restart: unless-stopped
     #     ports:
     #         - 8080:8080
+    #     networks:
+    #         - public
+    #         - database
+    #     depends_on:
+    #         - mariadb
