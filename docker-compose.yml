@@ -32,6 +32,10 @@ services:
             - IS_LOGGING=${IS_LOGGING}
             - ROOT_PORT=${PHP_PORT}
             - KIBANA_PORT=${KIBANA_PORT}
+            - DB_HOST=mariadb
+            - DB_NAME=${DB_NAME}
+            - DB_USER=${DB_USER}
+            - DB_PASSWD=${DB_PASSWORD}
         healthcheck:
             test: curl --fail -s http://localhost:80 || exit 1
             interval: 60s
@@ -119,21 +123,23 @@ services:
             - database
         command: --default-authentication-plugin=mysql_native_password
         environment:
-            MYSQL_DATABASE: ${MYSQL_DATABASE}
-            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-            MYSQL_USER: ${MYSQL_USER}
-            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_DATABASE: ${DB_NAME}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+            MYSQL_USER: ${DB_USER}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
         volumes:
             - ./mariadb/initscripts:/docker-entrypoint-initdb.d
             - ./mariadb/sysdata:/var/lib/mysql/
 
-    # adminer:
-    #     image: adminer
-    #     restart: unless-stopped
-    #     ports:
-    #         - 8080:8080
-    #     networks:
-    #         - public
-    #         - database
-    #     depends_on:
-    #         - mariadb
+    adminer:
+        image: adminer
+        restart: unless-stopped
+        ports:
+            - 8321:8080
+        depends_on:
+            - mariadb
+        networks:
+            - public
+            - database
+        volumes:
+            - ./mariadb/adminer/theme.css:/var/www/html/adminer.css

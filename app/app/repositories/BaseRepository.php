@@ -1,6 +1,7 @@
 <?php
 
 require_once '../app/core/LogManager.php';
+require_once '../app/core/Database.php';
 
 use Monolog\Logger;
 
@@ -11,7 +12,7 @@ use Monolog\Logger;
  */
 class BaseRepository
 {
-    protected PDO $db;
+    protected Database $db;
     protected LogManager $logger;
 
     /**
@@ -21,8 +22,8 @@ class BaseRepository
      */
     public function __construct()
     {
-        $this->initDb();
         $this->logger = new LogManager('php-repository-' . get_class($this));
+        $this->initDb();
     }
 
     /**
@@ -30,7 +31,12 @@ class BaseRepository
      */
     private function initDb()
     {
-        // $this->db = new PDO();
+        try {
+            $this->db = new Database();
+        } catch (Exception $ex) {
+            $this->logger->log('Unable to connect to the database. See inner exception: ' . $ex->getMessage(), Logger::ERROR);
+            throw $ex;
+        }
     }
 
     /**

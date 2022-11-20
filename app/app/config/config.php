@@ -14,3 +14,9 @@ define('KIBANA_PORT', getenv('KIBANA_PORT'));
 
 // Logging to ELK Stack
 define('IS_LOGGING', getenv('IS_LOGGING') == 'true');
+
+// MariaDB Connection
+define('DB_HOST', getenv('DB_HOST'));
+define('DB_NAME', getenv('DB_NAME'));
+define('DB_USER', getenv('DB_USER'));
+define('DB_PASS', getenv('DB_PASSWD'));
