@@ -6,13 +6,13 @@
 class User
 {
     // Attributes
-    public int $id;
+    public int $id = -1;
     public string $name;
     public string $email;
     public bool $wantsUpdates;
     public string $salt;
     public string $password;
-    private string $role;
+    public string $role;
     public string $profilePicture;
     public bool $isVerified;
     public string $verificationCode;
@@ -27,6 +27,7 @@ class User
     {
         $this->role = json_encode($roles);
     }
+
     /**
      * Gets the user's roles
      *

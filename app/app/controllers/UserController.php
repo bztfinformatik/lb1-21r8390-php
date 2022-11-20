@@ -58,21 +58,23 @@ class UserController extends Controller
             if (empty($data['email_err']) && empty($data['password_err'])) {
                 // Check if the user exists and the password is correct
                 $user = $this->userRepository->getUserByEmail($email);
-                if (!$user || !password_verify($user->salt . $this->getSaltSeparator() . $password, $user->password)) {
+                if (!isset($user) || !password_verify($user->salt . $this->getSaltSeparator() . $password, $user->password)) {
                     $data['email_err'] = $data['password_err'] = 'The email or password is incorrect';
-                } elseif (!$user->isVerified) {
-                    // Check if the user is verified
-                    $message = 'The email is not verified';
                 } else {
-                    // Save the credentials in the session
-                    SessionManager::login($user);
+                    if (!$user->isVerified) {
+                        // Check if the user is verified
+                        $message = 'The email is not verified. Please check your inbox for the verification email and click the link in it.';
+                    } else {
+                        // Save the credentials in the session
+                        SessionManager::login($user);
 
-                    // Log that the user has logged in
-                    $this->logger->log("User '$user->id' has successfully signed in", Logger::INFO);
+                        // Log that the user has logged in
+                        $this->logger->log("User '$user->id' has successfully signed in", Logger::INFO);
 
-                    // Redirect to the dashboard
-                    redirect('dashboard', true);
-                    return;
+                        // Redirect to the dashboard
+                        redirect('dashboard', true);
+                        return;
+                    }
                 }
 
                 $this->logger->log("Sign in for user '$email' failed!", Logger::INFO);
@@ -83,7 +85,7 @@ class UserController extends Controller
 
         // Load the view
         $this->render('user/signin', [
-            'urlroot' => URLROOT . '/login/signIn',
+            'form_url' => URLROOT . '/login/signIn',
             'data' => $data,
             'message' => $message
         ]);
@@ -135,7 +137,7 @@ class UserController extends Controller
 
                     // Send the verification email
                     // TODO: Popup with the message that the email has been sent
-                    $message = "The verification email has been sent. Please check your inbox.\nIf you don't see it, check your spam folder. \n\n!! This feature is not implemented yet, because it depends strongly on the database !!";
+                    $message = "The verification email has been sent. Please check your inbox.\nIf you don't see it, check your spam folder.";
 
                     $this->userRepository->save($user);
 
@@ -164,7 +166,6 @@ class UserController extends Controller
      */
     public function profile()
     {
-
         // Only logged in users can access this page
         if (!SessionManager::isLoggedIn()) {
             redirect('login/signin', true);
@@ -217,13 +218,20 @@ class UserController extends Controller
             if (empty($data['name_err']) && empty($data['email_err']) && empty($data['password_err']) && empty($data['picture_err'])) {
                 // Check if the user exists and the password is correct
                 $user = $this->userRepository->getUserByEmail($email);
-                if ($user && $user->id == SessionManager::getCurrentUserId()) {
+                if (isset($user) && $user->id != SessionManager::getCurrentUserId()) {
+                    $data['email_err'] = 'The email is already registered';
+                    $this->logger->log("Profile update for user '$email' failed!", Logger::DEBUG);
+                } else {
+                    // Load the user if it is not loaded yet
+                    if (!isset($user)) {
+                        $user = $this->userRepository->getUserById(SessionManager::getCurrentUserId());
+                    }
+
                     // Check if email was changed
-                    if ($user->email != $email) {
+                    if (strcasecmp($user->email, $email) != 0) {
                         // Send the verification email
-                        // TODO: Popup with the message that the email has been sent
                         $message_title = 'Verification needed';
-                        $message = "Because you changed your email we send you a new verification link. Please reverify that this email is valid.\nIf you don't see it, check your spam folder. \n\n!! This feature is not implemented yet, because it depends strongly on the database !!";
+                        $message = "Since you have changed your email address, we will send you a new verification link. Please confirm that this email is valid. Otherwise you will not be able to register!\n\nIf you don't see it, check your spam folder.";
 
                         // Generate a verification token and send it to the user
                         $user->isVerified = false;
@@ -240,7 +248,7 @@ class UserController extends Controller
                         $user->salt = $this->generateSalt();
                         $user->password = password_hash($user->salt . $this->getSaltSeparator() . $password, PASSWORD_DEFAULT);
                     }
-                    $user->picture = $picture;
+                    $user->profilePicture = $picture;
 
                     // Save the updates to the database
                     $this->userRepository->save($user);
@@ -248,14 +256,11 @@ class UserController extends Controller
 
                     // Log that the user has logged in
                     $this->logger->log("User '$user->id' has successfully updated his profile", Logger::INFO);
-                } elseif ($user) {
-                    $data['email_err'] = 'The email is already registered';
-                    $this->logger->log("Profile update for user '$email' failed!", Logger::INFO);
                 }
             }
             // Show the form again with the errors
         } else {
-            $user = $this->userRepository->getCurrentUser();
+            $user = $this->userRepository->getUserById(SessionManager::getCurrentUserId());
 
             if ($user) {
                 $data['name'] = $user->name;
@@ -427,7 +432,7 @@ class UserController extends Controller
 
         // Generate a verification token and send it to the user
         $user->isVerified = false;
-        $user->verificationToken = $this->generateSalt();
+        $user->verificationCode = $this->generateSalt();
 
         return $user;
     }

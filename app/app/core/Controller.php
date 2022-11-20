@@ -101,7 +101,7 @@ class Controller
 
         // Add default data
         $data['urlroot'] = URLROOT;
-        $data['isAdmin'] = SessionManager::hasRole($this->loadEnum('role', 'ADMIN')) || true;
+        $data['isAdmin'] = SessionManager::hasRole($this->loadEnum('role', 'ADMIN'));
         $data['isSignedIn'] = SessionManager::isLoggedIn();
         $data['user_profile_picture'] = SessionManager::getProfilePicture();
 

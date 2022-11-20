@@ -37,7 +37,7 @@ class SessionManager
      * Destroys the session
      */
     public static function logout()
-    {;
+    {
         session_destroy();
     }
 
