@@ -27,30 +27,27 @@
 
 {% block content %}
 
-<div class="hero">
-    <div class="hero-content flex-col md:flex-row-reverse">
-        <img alt="signIn form with fields illustration" src="/img/management.svg" class="h-full hidden lg:md:block hover:scale-125 transition-all duration-700" />
-        <div class="card flex-shrink-0 w-full shadow-2xl bg-base-100">
-            <div class="card-body">
-                <form action="{{ form_url }}" method="post">
-                    <h2 class="card-title">Profile</h2>
-                    <hr class="mt-2" />
+<div class="grid grid-cols-3 gap-4 py-4 mx-5 place-content-center">
+    <div class="col-span-3 md:col-span-2 shadow-2xl bg-base-100 p-5 rounded-md md:w-4/6 place-self-center">
+        <form action="{{ form_url }}" method="post" enctype="multipart/form-data">
+            <h2 class="card-title">Profile</h2>
+            <hr class="mt-2" />
 
-                    {{ inputs.input_field('name', data.name, data.name_err, 'text', 35) }}
-                    {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
-                    {{ inputs.toggle('Send Updates', 'wants_updates', data.wants_updates, 'Do you want to be informed by mail about status changes of your projects?') }}
-                    {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
-                    {{ inputs.upload_file('picture', data.picture, data.picture_err, 'image/*') }}
+            {{ inputs.input_field('name', data.name, data.name_err, 'text', 35) }}
+            {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
+            {{ inputs.toggle('Send Updates', 'wants_updates', data.wants_updates, 'Do you want to be informed by mail about status changes of your projects?') }}
+            {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
+            {{ inputs.upload_file('picture', data.picture, data.picture_err, 'image/*') }}
 
-                    <input type="hidden" name="csrf_token" value="{{ data.csrf_token }}">
+            <input type="hidden" name="csrf_token" value="{{ data.csrf_token }}">
 
-                    <div class="form-control mt-6">
-                        <button type="submit" class="btn btn-active btn-primary">Save</button>
-                    </div>
-                </form>
+            <div class="form-control mt-5">
+                <button type="submit" class="btn btn-active btn-primary">Save</button>
             </div>
-        </div>
+        </form>
     </div>
+
+    <img alt="profile management form" src="/img/management.svg" class="h-full hidden md:block hover:scale-125 transition-all duration-700" />
 </div>
 
 {{ message.message(message_title, message) }}

@@ -44,7 +44,7 @@
             {% include 'project/evaluate.twig.html' %}
         </div>
 
-        <input type="hidden" name="csrf_token" value="{{ data.csrf_token }}">
+        <input type="hidden" name="csrf_token" value="{{ data.csrf_token }}" type="password">
 
         <div class="col-span-4 text-end mt-4">
             {% if currentPage != 0 %}

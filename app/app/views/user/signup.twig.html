@@ -11,27 +11,24 @@
 
 {% block content %}
 
-<div class="hero">
-    <div class="hero-content flex-col md:flex-row-reverse">
-        <img alt="signIn form with fields illustration" src="/img/signUp.svg" class="h-full max-w-sm hidden md:block lg:hover:scale-125 transition-all duration-700" />
-        <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-            <div class="card-body">
-                <form action="{{ form_url }}" method="post" enctype="multipart/form-data">
-                    <h2 class="card-title">Sign Up</h2>
-                    <hr class="mt-2" />
+<div class="grid grid-cols-3 gap-4 py-4 place-content-center">
+    <div class="col-span-3 md:col-span-2 shadow-2xl bg-base-100 p-5 rounded-md md:w-4/6 place-self-center">
+        <form action="{{ form_url }}" method="post" enctype="multipart/form-data">
+            <h2 class="card-title">Sign Up</h2>
+            <hr class="mt-2" />
 
-                    {{ inputs.input_field('name', data.name, data.name_err, 'text', 35) }}
-                    {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
-                    {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
-                    {{ inputs.upload_file('picture', data.picture, data.picture_err, 'image/*') }}
+            {{ inputs.input_field('name', data.name, data.name_err, 'text', 35) }}
+            {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
+            {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
+            {{ inputs.upload_file('picture', data.picture, data.picture_err, 'image/*') }}
 
-                    <div class="form-control mt-6">
-                        <button type="submit" class="btn btn-primary">Sign Up</button>
-                    </div>
-                </form>
+            <div class="form-control mt-5">
+                <button type="submit" class="btn btn-primary">Sign Up</button>
             </div>
-        </div>
+        </form>
     </div>
+
+    <img alt="signUp form with fields illustration" src="/img/signUp.svg" class="h-full hidden md:block hover:scale-125 transition-all duration-700" />
 </div>
 
 {{ message.message(message_title, message) }}
