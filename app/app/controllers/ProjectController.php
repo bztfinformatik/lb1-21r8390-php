@@ -134,7 +134,7 @@ class ProjectController extends Controller
             $data = array_merge($data, $generalData, $appearenceData, $structureData, $evaluationData);
 
             if ($isPost) {
-                $this->nextPage($project, $currentStep, $maxPage, $data, $generalData, $appearenceData, $structureData, $evaluationData);
+                $this->nextPage($project, $currentStep, $maxPage, $prev, $data, $generalData, $appearenceData, $structureData, $evaluationData);
             }
         }
 
@@ -560,7 +560,7 @@ class ProjectController extends Controller
      * @param array $structureData The structure data to check
      * @param array $evaluationData The evaluation data to check
      */
-    private function nextPage(Project|null $project, int &$currentStep, int $maxPage, array $data, array $generalData, array $appearenceData, array $structureData, array $evaluationData)
+    private function nextPage(Project|null $project, int &$currentStep, int $maxPage, bool $wantPrevious, array $data, array $generalData, array $appearenceData, array $structureData, array $evaluationData)
     {
         // Check if there are any errors
         $hasErrors = false;
@@ -588,7 +588,7 @@ class ProjectController extends Controller
             $currentStep++;
 
             // Has reached last page
-            if ($currentStep >= $maxPage) {
+            if ($currentStep >= $maxPage && !$wantPrevious) {
                 // Save the project
                 $newProject = $this->loadProject($data);
                 if (isset($project)) {

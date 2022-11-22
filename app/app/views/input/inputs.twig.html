@@ -14,13 +14,13 @@
 </div>
 {% endmacro %}
 
-{% macro textarea(name, value, error, rows = 2, size = -1) %}
+{% macro textarea(name, value, error, rows = 2, size = -1, readonly = false) %}
 <div class="form-control">
     <label class="label">
         <span class="label-text font-medium">{{ name|capitalize }}</span>
     </label>
 
-    <textarea name="{{ name }}" {% if size> 0 %} rows="{{ rows }}" maxlength="{{ size }}" {% endif %} class="textarea {% if error is not empty %} textarea-error {% endif %}">{{ value|e }}</textarea>
+    <textarea name="{{ name }}" {% if size>0 %} rows="{{ rows }}" maxlength="{{ size }}" {% endif %} class="textarea {% if error is not empty %} textarea-error {% endif %}" {% if readonly==true %}readonly{% endif %}>{{ value|e }}</textarea>
 
     {% if error is not empty %}
     <label class="label">
@@ -70,13 +70,13 @@
 </div>
 {% endmacro %}
 
-{% macro select(name, value, options, error) %}
+{% macro select(name, value, options, error, readonly = false) %}
 <div class="form-control">
     <label class="label">
         <span class="label-text font-medium">{{ name|capitalize }}</span>
     </label>
 
-    <select name="{{ name }}" class="select select-bordered select-sm {% if error is not empty %} select-error {% endif %}">
+    <select name="{{ name }}" class="select select-bordered select-sm {% if error is not empty %} select-error {% endif %} {% if readonly==true %} pointer-events-none {% endif %}">
         {% for key, option in options %}
         <option value="{{ option }}" {% if option==value %} selected {% endif %}>{{ option|capitalize|replace({'_': ' '}) }}</option>
         {% endfor %}
