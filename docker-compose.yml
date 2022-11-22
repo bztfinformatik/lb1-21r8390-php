@@ -135,7 +135,7 @@ services:
         image: adminer
         restart: unless-stopped
         ports:
-            - 8321:8080
+            - ${ADMINER_PORT}:8080
         depends_on:
             - mariadb
         networks:
