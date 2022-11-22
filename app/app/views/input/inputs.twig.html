@@ -55,14 +55,14 @@
 {% endmacro %}
 
 {% macro toggle(text, name, value, tooltip = '') %}
-<div class="form-control">
+<div>
     {% if tooltip is empty %}
     <span class="label-text font-medium">{{ text }}</span>
     <input type="checkbox" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
     {% else %}
     <div class="tooltip tooltip-bottom" data-tip="{{ tooltip }}">
         <label class="label cursor-pointer">
-            <span class="label-text font-medium">{{ text }}</span>
+            <span class="label-text font-medium mr-5">{{ text }}</span>
             <input type="checkbox" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
         </label>
     </div>
@@ -77,7 +77,7 @@
     </label>
 
     <select name="{{ name }}" class="select select-bordered select-sm {% if error is not empty %} select-error {% endif %}">
-        {% for option in options %}
+        {% for key, option in options %}
         <option value="{{ option }}" {% if option==value %} selected {% endif %}>{{ option|capitalize|replace({'_': ' '}) }}</option>
         {% endfor %}
     </select>

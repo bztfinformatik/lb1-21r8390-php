@@ -12,29 +12,9 @@ class User
     public bool $wantsUpdates;
     public string $salt;
     public string $password;
-    public string $role;
+    public Role $role;
     public string $profilePicture;
     public bool $isVerified;
     public string $verificationCode;
     public $createdAt;
-
-    /**
-     * Sets the user's roles because they are saved in a json format
-     * 
-     * @param array $roles The roles to set
-     */
-    public function setRoles(array $roles)
-    {
-        $this->role = json_encode($roles);
-    }
-
-    /**
-     * Gets the user's roles
-     *
-     * @return array The user's roles
-     */
-    public function getRoles(): array
-    {
-        return json_decode($this->role);
-    }
 }

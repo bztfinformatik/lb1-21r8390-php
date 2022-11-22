@@ -16,7 +16,7 @@ class UserRepository extends BaseRepository
     public function save(User $user)
     {
         if (!isset($user)) {
-            throw new Exception('User is null');
+            throw new InvalidArgumentException('User is null');
         }
 
         // Check if the user is new
@@ -46,7 +46,7 @@ class UserRepository extends BaseRepository
         $this->db->bind(':wantsUpdates', $user->wantsUpdates);
         $this->db->bind(':salt', $user->salt);
         $this->db->bind(':password', $user->password);
-        $this->db->bind(':role', $user->role);
+        $this->db->bind(':role', $user->role->value);
         $this->db->bind(':profilePicture', $user->profilePicture);
         $this->db->bind(':isVerified', $user->isVerified);
         $this->db->bind(':verificationCode', $user->verificationCode ?? '');
@@ -64,7 +64,7 @@ class UserRepository extends BaseRepository
     public function delete(User $user): bool
     {
         if (!isset($user) || !isset($user->id) || $user->id == -1) {
-            throw new Exception('User is not set or has no id');
+            throw new InvalidArgumentException('User is not set or has no id');
         }
 
         $this->logger->log("Deleting user '$user->email' from the database", Logger::NOTICE);
@@ -88,7 +88,7 @@ class UserRepository extends BaseRepository
      */
     public function getUserById(int $id): User|null
     {
-        $this->logger->log("Reading user with the id '$id' from the database", Logger::INFO);
+        $this->logger->log("Reading user with the id '$id' from the database", Logger::DEBUG);
 
         // Get the user
         $this->db->query('SELECT * FROM user WHERE id = :id LIMIT 1');
@@ -97,7 +97,7 @@ class UserRepository extends BaseRepository
         // Get the result
         $result = $this->db->single();
 
-        // Check if the user was found
+        // Return the user if found
         return $this->loadUser($result);
     }
 
@@ -150,7 +150,7 @@ class UserRepository extends BaseRepository
      */
     public function getAllUsers(): array
     {
-        $this->logger->log("Reading all users from the database", Logger::INFO);
+        $this->logger->log("Reading all users from the database", Logger::DEBUG);
 
         // Get the users
         $this->db->query('SELECT * FROM user ORDER BY createdAt');
@@ -174,6 +174,7 @@ class UserRepository extends BaseRepository
     /**
      * Loads the user model and sets the properties
      * 
+     * @param array $result The result from the database
      */
     private function loadUser($result): User|null
     {
@@ -187,7 +188,7 @@ class UserRepository extends BaseRepository
             $user->wantsUpdates = $result['wantsUpdates'];
             $user->salt = $result['salt'];
             $user->password = $result['password'];
-            $user->role = $result['role'];
+            $user->role = $this->loadEnum('role', $result['role']);
             $user->profilePicture = $result['profilePicture'];
             $user->isVerified = $result['isVerified'];
             $user->verificationCode = $result['verificationCode'];
@@ -222,7 +223,7 @@ class UserRepository extends BaseRepository
         $user->wantsUpdates = true;
         $user->salt = 'salt';
         $user->password = password_hash($user->salt . '$' . 'Test123!Test123!', PASSWORD_DEFAULT);
-        $user->setRoles(array('admin', 'teacher', 'user'));
+        $user->role = $this->loadEnum('role', 'USER');
         $user->profilePicture = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII';
         $user->isVerified = true;
         $user->verificationCode = 'verificationCode';

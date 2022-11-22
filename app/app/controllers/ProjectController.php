@@ -35,8 +35,8 @@ class ProjectController extends Controller
      */
     public function delete(int $projectId = -1)
     {
-        if ($projectId <= 0) {
-            $this->projectRepository->delete($projectId);
+        if ($projectId > 0) {
+            $this->projectRepository->delete($projectId, SessionManager::getCurrentUserId());
         }
 
         redirect('', true);
@@ -46,14 +46,22 @@ class ProjectController extends Controller
      * Shows the creation form for a new project
      * 
      * @param int $currentStep The current step of the creation process
+     * @param bool $prev Indicates if the user wants to go back to the previous step
      */
-    public function create(int $currentStep = 0)
+    public function create(int $currentStep = 0, bool $prev = false)
     {
+        // Create can only be called with a valid step
+        if (strtoupper($_SERVER['REQUEST_METHOD']) == 'GET' && $currentStep != 0) {
+            // GET requests should start from the beginning
+            redirect($this::class . '/create/' . '0', true);
+            return;
+        }
+
         // The url where the form is submitted to
         $formUrl = URLROOT . "/" . $this::class . '/create/';
 
         // Show the view
-        $this->projectView($formUrl, $currentStep, null, 3);
+        $this->projectView($formUrl, $currentStep, null, 3, $prev);
     }
 
     /**
@@ -62,11 +70,12 @@ class ProjectController extends Controller
      * @param int $projectId The ID of the project
      * @param int $currentStep The current step of the creation process
      * @param int $maxPage The maximum page of the process
+     * @param bool $prev Indicates if the user wants to go back to the previous step
      */
-    public function edit(int $projectId, int $currentStep = 0)
+    public function edit(int $projectId, int $currentStep = 0, bool $prev = false)
     {
         // Get the project from the database
-        $project = $this->projectRepository->getById($projectId);
+        $project = $this->projectRepository->getProjectById($projectId, SessionManager::getCurrentUserId());
 
         // Check if the project exists
         if ($project === null) {
@@ -78,7 +87,7 @@ class ProjectController extends Controller
         $formUrl = URLROOT . "/" . $this::class . '/edit/' . $projectId . '/';
 
         // Show the view
-        $this->projectView($formUrl, $currentStep, $project, 4);
+        $this->projectView($formUrl, $currentStep, $project, 4, $prev);
     }
 
     /**
@@ -88,66 +97,51 @@ class ProjectController extends Controller
      * @param integer $currentStep The current step of the creation process
      * @param Project|null $project The project to edit
      * @param integer $maxPage The maximum page of the process
+     * @param bool $prev Indicates if the user wants to go back to the previous step
      */
-    public function projectView(string $formUrl, int $currentStep, Project|null $project, int $maxPage)
+    public function projectView(string $formUrl, int $currentStep, Project|null $project, int $maxPage, bool $prev)
     {
+        $this->logger->log('Showing the project view on page ' . $currentStep, Logger::DEBUG);
+
         // Init form data
         $message = [
             'title' => '',
             'text' => '',
         ];
         $data = array();
+        $prevStep = max($currentStep - 1, 0);
 
+        // Check if the form was submitted
         $isPost = strtoupper($_SERVER['REQUEST_METHOD']) == 'POST';
 
         // Check CSRF token
-        if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST' && !SessionManager::isCSRFTokenValid($_POST['csrf_token'])) {
+        if ($isPost && !SessionManager::isCSRFTokenValid($_POST['csrf_token'])) {
             $this->logger->log('CSRF token of user ' . SessionManager::getCurrentUserId() . ' is invalid', Logger::WARNING);
             $message['title'] = 'The CSRF token is invalid';
             $message['text'] = 'Your request seems to be faulty. Please refresh the page and try again!';
         } else {
-            // Merge all request together
-            $data = array_merge($data, $this->generalPage($project, $isPost && $currentStep >= 0));
-            $data = array_merge($data, $this->appearencePage($project, $isPost && $currentStep >= 1));
-            $data = array_merge($data, $this->structurePage($project, $isPost && $currentStep >= 2));
-            $data = array_merge($data, $this->evaluationPage($project, $isPost && $currentStep >= 3));
-
             // Only admins can confirm projects
             // Confirmed or rejected projects can view the confirmation page
-            // if (SessionManager::hasRole($this->loadEnum('role', 'admin')) || !$project->isInProgress()) {
+            $isAdmin = SessionManager::hasRole($this->loadEnum('role', 'admin')->value);
+
+            // Load all sites
+            $generalData = $this->generalPage($project, $isPost);
+            $appearenceData = $this->appearencePage($project, $isPost);
+            $structureData = $this->structurePage($project, $isPost);
+            $evaluationData = $this->evaluationPage($project, $isPost && $isAdmin);
+
+            // Merge all data
+            $data = array_merge($data, $generalData, $appearenceData, $structureData, $evaluationData);
 
             if ($isPost) {
-                // Check if there are any errors
-                $hasErrors = false;
-                foreach ($data as $key => $value) {
-                    if (str_ends_with($key, '_err') && $value != '') {
-                        $this->logger->log('The project could not be saved because of an error in the ' . $key . ' field', Logger::WARNING);
-                        echo $key . ' ' . $value;
-                        $hasErrors = true;
-                        break;
-                    }
-                }
-
-                // Do not go to next page if there are errors
-                if (!$hasErrors) {
-                    $currentStep++;
-                }
-
-                // Has reached last page
-                if ($currentStep >= $maxPage) {
-                    // Save the project
-                    if ($project === null) {
-                        $project = $this->loadModel('project/project');
-                    }
-                    $this->projectRepository->save($project);
-                    redirect('', true);
-                    return;
-                }
+                $this->nextPage($project, $currentStep, $maxPage, $data, $generalData, $appearenceData, $structureData, $evaluationData);
             }
         }
 
         // Set the CSRF token
         $data['csrf_token'] = SessionManager::getCsrfToken();
+
+        $currentStep = $prev ? $prevStep : $currentStep;
 
         // Render the view
         $this->render('project/base', [
@@ -184,11 +178,11 @@ class ProjectController extends Controller
             'repo_docs_err' => '',
             'repo_code' => '',
             'repo_code_err' => '',
-            'want_readme' => true,
-            'want_ignore' => true,
-            'want_css' => false,
-            'want_js' => false,
-            'want_pages' => true,
+            'wantReadme' => true,
+            'wantIgnore' => true,
+            'wantCSS' => false,
+            'wantJS' => false,
+            'wantPages' => true,
         ];
 
         // Check if the form was submitted or requested
@@ -202,14 +196,18 @@ class ProjectController extends Controller
             $data['repo_code'] = $repo_code = trim(htmlspecialchars($_POST['repo_code']));
 
             // Set the checkboxes
-            $data['want_readme'] = $want_readme =  filter_has_var(INPUT_POST, 'want_readme');
-            $data['want_ignore'] = $want_ignore =  filter_has_var(INPUT_POST, 'want_ignore');
-            $data['want_css'] = $want_css =  filter_has_var(INPUT_POST, 'want_css');
-            $data['want_js'] = $want_js =  filter_has_var(INPUT_POST, 'want_js');
-            $data['want_pages'] = $want_pages =  filter_has_var(INPUT_POST, 'want_pages');
+            $data['wantReadme'] = filter_has_var(INPUT_POST, 'wantReadme');
+            $data['wantIgnore'] = filter_has_var(INPUT_POST, 'wantIgnore');
+            $data['wantCSS'] = filter_has_var(INPUT_POST, 'wantCSS');
+            $data['wantJS'] = filter_has_var(INPUT_POST, 'wantJS');
+            $data['wantPages'] = filter_has_var(INPUT_POST, 'wantPages');
 
             // Validate the data
             $data['title_err'] = $this->validateLength('title', $title, 2, 60);
+            if (empty($data['title_err']) && $this->projectRepository->existsProjectWithName($title, isset($project) ? $project->id : -1, SessionManager::getCurrentUserId())) {
+                $data['title_err'] = 'A project with this name already exists';
+            }
+
             $data['description_err'] = $this->validateLength('description', $description, 10, 255);
 
             $data['repo_docs_err'] = $this->validateUrl('documentation repository', $repo_docs);
@@ -226,11 +224,11 @@ class ProjectController extends Controller
             $data['to'] = $project->toDate;
             $data['repo_docs'] = $project->docsRepo;
             $data['repo_code'] = $project->codeRepo;
-            $data['want_readme'] = $project->wantReadme;
-            $data['want_ignore'] = $project->wantIgnore;
-            $data['want_css'] = $project->wantCSS;
-            $data['want_js'] = $project->wantJS;
-            $data['want_pages'] = $project->wantPages;
+            $data['wantReadme'] = $project->wantReadme;
+            $data['wantIgnore'] = $project->wantIgnore;
+            $data['wantCSS'] = $project->wantCSS;
+            $data['wantJS'] = $project->wantJS;
+            $data['wantPages'] = $project->wantPages;
         }
 
         // Return the data
@@ -248,10 +246,10 @@ class ProjectController extends Controller
     {
         // Init the form data
         $data = [
-            'color' => $this->loadEnum('project/color', 0),
+            'color' => $this->loadEnum('project/color', 0)->name,
             'color_err' => '',
             'color_options' => array_column(Color::cases(), 'name'),
-            'font' => $this->loadEnum('project/font', 0),
+            'font' => $this->loadEnum('project/font', 0)->name,
             'font_err' => '',
             'font_options' => array_column(Font::cases(), 'name'),
             'wantDarkMode' => true,
@@ -281,8 +279,8 @@ class ProjectController extends Controller
             // Show the form again with the errors
         } elseif ($project) {
             // Set the form data from the project
-            $data['color'] = $project->color;
-            $data['font'] = $project->font;
+            $data['color'] = $project->color->name;
+            $data['font'] = $project->font->name;
             $data['wantDarkMode'] = $project->wantDarkMode;
             $data['wantCopyright'] = $project->wantCopyright;
             $data['wantSearch'] = $project->wantSearch;
@@ -345,7 +343,7 @@ class ProjectController extends Controller
         $data = [
             'comment' => '',
             'comment_err' => '',
-            'status' => $this->loadEnum('project/status', 0),
+            'status' => $this->loadEnum('project/status', 0)->name,
             'status_err' => '',
             'status_options' => array_column(Status::cases(), 'name'),
         ];
@@ -361,7 +359,7 @@ class ProjectController extends Controller
         } elseif ($project) {
             // Set the form data from the project
             $data['comment'] = $project->comment;
-            $data['status'] = $project->status;
+            $data['status'] = $project->status->name;
         }
 
         // Return the data
@@ -406,11 +404,9 @@ class ProjectController extends Controller
     private static function validateUrl(string $name, string $value): string
     {
         // Store the error message
-        $error = '';
+        $error = ProjectController::validateLength($name, $value, 10, 255);
 
-        if (empty($value)) {
-            $error = 'The ' . $name . ' is required';
-        } elseif (!filter_var($value, FILTER_VALIDATE_URL)) {
+        if (empty($error) && !filter_var($value, FILTER_VALIDATE_URL)) {
             $error = 'The ' . $name . ' is not a valid URL';
         }
 
@@ -420,11 +416,11 @@ class ProjectController extends Controller
     /**
      * Validates two dates to see if they are valid and in the correct order
      *
-     * @param Date $dateFrom The start date
-     * @param Date $dateTo The end date
+     * @param string $dateFrom The start date
+     * @param string $dateTo The end date
      * @return string The error message
      */
-    private static function validateDate($dateFrom, $dateTo): string
+    private static function validateDate(string $dateFrom, string $dateTo): string
     {
         // Store the error message
         $error = '';
@@ -499,6 +495,126 @@ class ProjectController extends Controller
         }
 
         return $error;
+    }
+
+    #endregion
+
+    // --- Helper methods --- //
+    #region Helper methods
+
+    /**
+     * Loads the project model and sets the properties 
+     * 
+     * @param array $result The result from the database
+     */
+    private function loadProject(array $result): Project|null
+    {
+        // Check if the project exists
+        if ($result == null) {
+            return null;
+        }
+
+        // Create the project
+        $project = $this->loadModel('project/project');
+        $project->id = $result['id'] ?? -1;
+        $project->userId = SessionManager::getCurrentUserId();
+        $project->title = $result['title'];
+        $project->description = $result['description'];
+        $project->createdAt = date('Y-m-d H:i:s');
+        $project->fromDate = date('Y-m-d H:i:s', strtotime($result['from']));
+        $project->toDate = date('Y-m-d H:i:s', strtotime($result['to']));
+        $project->docsRepo = $result['repo_docs'];
+        $project->codeRepo = $result['repo_code'];
+        $project->wantReadme = $result['wantReadme'];
+        $project->wantIgnore = $result['wantIgnore'];
+        $project->wantCSS = $result['wantCSS'];
+        $project->wantJS = $result['wantJS'];
+        $project->wantPages = $result['wantPages'];
+        $project->color = $this->loadEnum('project/color', $result['color']);
+        $project->font = $this->loadEnum('project/font', $result['font']);
+        $project->wantDarkMode = $result['wantDarkMode'];
+        $project->wantCopyright = $result['wantCopyright'];
+        $project->wantSearch = $result['wantSearch'];
+        $project->wantTags = $result['wantTags'];
+        $project->logo = $result['logo'];
+        $project->wantJournal = $result['wantJournal'];
+        $project->wantExamples = $result['wantExamples'];
+        $project->structure = $result['structure'];
+        $project->confirmedBy = $result['confirmedBy'] ?? null;
+        $project->comment = $result['comment'] ?? '';
+        $project->status = $this->loadEnum('project/status', $result['status']);
+        $project->downloadUrl = $result['downloadUrl'] ?? '';
+
+        return $project;
+    }
+
+    /**
+     * Loads the next page if there are no errors
+     *
+     * @param Project $project The project to save
+     * @param integer $currentStep The current step
+     * @param integer $maxPage The maximum page
+     * @param array $data The data to save
+     * @param array $generalData The general data to check
+     * @param array $appearenceData The appearence data to check
+     * @param array $structureData The structure data to check
+     * @param array $evaluationData The evaluation data to check
+     */
+    private function nextPage(Project|null $project, int &$currentStep, int $maxPage, array $data, array $generalData, array $appearenceData, array $structureData, array $evaluationData)
+    {
+        // Check if there are any errors
+        $hasErrors = false;
+        switch ($currentStep) {
+            case 0:
+                $hasErrors = $this->hasError($generalData);
+                break;
+            case 1:
+                $hasErrors = $this->hasError($appearenceData);
+                break;
+            case 2:
+                $hasErrors = $this->hasError($structureData);
+                break;
+            case 3:
+                $hasErrors = $this->hasError($evaluationData);
+                break;
+            default:
+                $this->logger->log('Invalid step ' . $currentStep . ' of user ' . SessionManager::getCurrentUserId(), Logger::WARNING);
+                $hasErrors = $this->hasError($data);
+                break;
+        }
+
+        // Do not go to next page if there are errors
+        if (!$hasErrors) {
+            $currentStep++;
+
+            // Has reached last page
+            if ($currentStep >= $maxPage) {
+                // Save the project
+                $newProject = $this->loadProject($data);
+                if (isset($project)) {
+                    $newProject->id = $project->id;
+                }
+                $this->projectRepository->save($newProject);
+                redirect('', true);
+            }
+        }
+    }
+
+    /**
+     * Checks if the array has errors
+     *
+     * @param array $data The array to check
+     * @return bool True if there are errors, false otherwise
+     */
+    private function hasError(array $data): bool
+    {
+        foreach ($data as $key => $value) {
+            if (str_ends_with($key, '_err') && !empty($value)) {
+                $this->logger->log('The project could not be saved because of an error in the ' . $key . ' field', Logger::DEBUG);
+                return true;
+            }
+        }
+        return false;
     }
 
     #endregion

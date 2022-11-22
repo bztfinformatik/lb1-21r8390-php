@@ -1,18 +1,30 @@
 {% import "input/inputs.twig.html" as inputs %}
 
-<div class="col-span-4 sm:col-span-2">
+<div class="col-span-4 md:col-span-2">
     {{ inputs.input_field('title', data.title, data.title_err, 'text', 60) }}
 </div>
-{{ inputs.input_field('from', data.from|date("Y-m-d"), data.date_err, 'date') }}
-{{ inputs.input_field('to', data.to|date("Y-m-d"), data.date_err, 'date') }}
+<div class="col-span-4 sm:col-span-2 md:col-span-1">
+    {{ inputs.input_field('from', data.from|date("Y-m-d"), data.date_err, 'date') }}
+</div>
+<div class="col-span-4 sm:col-span-2 md:col-span-1">
+    {{ inputs.input_field('to', data.to|date("Y-m-d"), data.date_err, 'date') }}
+</div>
 
 <div class="col-span-4">
     {{ inputs.textarea('description', data.description, data.description_err, 3, 255) }}
 </div>
 
 <div class="col-span-4">
-    {{ inputs.input_field('repo_docs', data.repo_docs, data.repo_docs_err, 'text', 60, 'Documentation Repository') }}
+    {{ inputs.input_field('repo_docs', data.repo_docs, data.repo_docs_err, 'url', 60, 'Documentation Repository') }}
 </div>
 <div class="col-span-4">
-    {{ inputs.input_field('repo_code', data.repo_code, data.repo_code_err, 'text', 60, 'Soruce Code Repository') }}
+    {{ inputs.input_field('repo_code', data.repo_code, data.repo_code_err, 'url', 60, 'Soruce Code Repository') }}
+</div>
+
+<div class="col-span-4 flex flex-wrap gap-x-7">
+    {{ inputs.toggle('Readme', 'wantReadme', data.wantReadme, 'Would you like to have your own readme?') }}
+    {{ inputs.toggle('.gitignore', 'wantIgnore', data.wantIgnore, 'Does your project need a .gitignore?') }}
+    {{ inputs.toggle('Custom CSS', 'wantCSS', data.wantCSS, 'Do you want to extend your documentation with custom CSS?') }}
+    {{ inputs.toggle('Custom JS', 'wantJS', data.wantJS, 'Want to extend your documentation with custom JS?') }}
+    {{ inputs.toggle('Pages', 'wantPages', data.wantPages, 'Do you want to host your docs on GitHub Pages?') }}
 </div>

@@ -29,7 +29,7 @@ class SessionManager
         $_SESSION['user_name'] = $user->name;
         $_SESSION['user_email'] = $user->email;
         $_SESSION['user_wants_updates'] = $user->wantsUpdates;
-        $_SESSION['user_roles'] = $user->getRoles();
+        $_SESSION['user_role'] = $user->role->value;
         $_SESSION['user_profile_picture'] = $user->profilePicture;
     }
 
@@ -80,9 +80,9 @@ class SessionManager
      * @param Role $role The role to check
      * @return boolean True if the user has the role, false otherwise
      */
-    public static function hasRole($role): bool
+    public static function hasRole(int $role): bool
     {
-        return in_array($role, $_SESSION['user_roles'] ?? []);
+        return $_SESSION['user_role'] ?? 0 === $role;
     }
 
     /**

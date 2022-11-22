@@ -36,7 +36,10 @@ class Dashboard extends Controller
     public function kibana()
     {
         // Only allow access to the Kibana dashboard if the user is logged in and has the role 'admin'
-        // Mock: !SessionManager::hasRole($this->loadEnum('role', 'ADMIN')) 
+        if (!SessionManager::isLoggedIn() || !SessionManager::hasRole($this->loadEnum('role', 'ADMIN')->value)) {
+            redirect('', true);
+            return;
+        }
 
         $this->logger->log('Showing the kibana dashboard', Logger::DEBUG);
 

@@ -31,6 +31,7 @@ function resolveComponentName(string $pathWithSlashes): string
 function redirect(string $page, bool $temporary = false)
 {
     header('location: ' . URLROOT . '/' . $page, $temporary ? 301 : 308);
+    exit();
 }
 
 /**

@@ -9,7 +9,7 @@ class Project
 {
     // Attributes
     public int $id;
-    public User $user;
+    public int $userId;
 
     // General
     public string $title;
@@ -39,11 +39,10 @@ class Project
     // Folder structure
     public bool $wantJournal;
     public bool $wantExamples;
-    public StructureNode $structure;
+    public string $structure;
 
     // Confirmation
-    public User $confirmedBy;
-    public $confirmedAt;
+    public int|null $confirmedBy;
     public string $comment;
     public Status $status;
     public string $downloadUrl;

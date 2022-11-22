@@ -71,9 +71,8 @@ class UserController extends Controller
                         // Log that the user has logged in
                         $this->logger->log("User '$user->id' has successfully signed in", Logger::INFO);
 
-                        // Redirect to the dashboard
+                        // // Redirect to the dashboard
                         redirect('dashboard', true);
-                        return;
                     }
                 }
 
@@ -222,40 +221,7 @@ class UserController extends Controller
                     $data['email_err'] = 'The email is already registered';
                     $this->logger->log("Profile update for user '$email' failed!", Logger::DEBUG);
                 } else {
-                    // Load the user if it is not loaded yet
-                    if (!isset($user)) {
-                        $user = $this->userRepository->getUserById(SessionManager::getCurrentUserId());
-                    }
-
-                    // Check if email was changed
-                    if (strcasecmp($user->email, $email) != 0) {
-                        // Send the verification email
-                        $message_title = 'Verification needed';
-                        $message = "Since you have changed your email address, we will send you a new verification link. Please confirm that this email is valid. Otherwise you will not be able to register!\n\nIf you don't see it, check your spam folder.";
-
-                        // Generate a verification token and send it to the user
-                        $user->isVerified = false;
-                        $user->verificationToken = $this->generateSalt();
-                    }
-
-                    // Update the user
-                    $user->name = $name;
-                    $user->email = $email;
-                    $user->wantsUpdates = $wantsUpdates;
-                    // Only change the password if it was changed
-                    if ($passwordPlaceholder != $password) {
-                        // Generate a salt and hash the password
-                        $user->salt = $this->generateSalt();
-                        $user->password = password_hash($user->salt . $this->getSaltSeparator() . $password, PASSWORD_DEFAULT);
-                    }
-                    $user->profilePicture = $picture;
-
-                    // Save the updates to the database
-                    $this->userRepository->save($user);
-                    SessionManager::login($user);
-
-                    // Log that the user has logged in
-                    $this->logger->log("User '$user->id' has successfully updated his profile", Logger::INFO);
+                    $this->saveUser($user, $message_title, $message, $name, $email, $wantsUpdates, $picture, $password, $passwordPlaceholder);
                 }
             }
             // Show the form again with the errors
@@ -285,6 +251,57 @@ class UserController extends Controller
     {
         SessionManager::logout();
         redirect('', true);
+    }
+
+    /**
+     * Saves the user to the database
+     *
+     * @param User $user The user to save
+     * @param string $message_title The title of the message to show
+     * @param string $message The message to show
+     * @param string $name The name of the user
+     * @param string $email The email of the user
+     * @param boolean $wantsUpdates If the user wants to receive updates
+     * @param string $picture The profile picture of the user
+     * @param string $password The password of the user
+     * @param string $passwordPlaceholder The placeholder for the password
+     */
+    private function saveUser(User &$user, string &$message_title, string &$message, string $name, string $email, bool $wantsUpdates, string $picture, string $password, string $passwordPlaceholder)
+    {
+        // Load the user if it is not loaded yet
+        if (!isset($user)) {
+            $user = $this->userRepository->getUserById(SessionManager::getCurrentUserId());
+        }
+
+        // Check if email was changed
+        if (strcasecmp($user->email, $email) != 0) {
+            // Send the verification email
+            $message_title = 'Verification needed';
+            $message = "Since you have changed your email address, we will send you a new verification link. Please confirm that this email is valid. Otherwise you will not be able to register!\n\nIf you don't see it, check your spam folder.";
+
+            // Generate a verification token and send it to the user
+            $user->isVerified = false;
+            $user->verificationToken = $this->generateSalt();
+        }
+
+        // Update the user
+        $user->name = $name;
+        $user->email = $email;
+        $user->wantsUpdates = $wantsUpdates;
+        // Only change the password if it was changed
+        if ($passwordPlaceholder != $password) {
+            // Generate a salt and hash the password
+            $user->salt = $this->generateSalt();
+            $user->password = password_hash($user->salt . $this->getSaltSeparator() . $password, PASSWORD_DEFAULT);
+        }
+        $user->profilePicture = $picture;
+
+        // Save the updates to the database
+        $this->userRepository->save($user);
+        SessionManager::login($user);
+
+        // Log that the user has logged in
+        $this->logger->log("User '$user->id' has successfully updated his profile", Logger::INFO);
     }
 
     #endregion
@@ -423,7 +440,7 @@ class UserController extends Controller
         $user->name = $name;
         $user->email = $email;
         $user->wantsUpdates = true;
-        $user->setRoles(array($this->loadEnum('role', 'USER')));
+        $user->role = $this->loadEnum('role', 'USER');
         $user->profilePicture = $profilePicture;
 
         // Generate a salt and hash the password

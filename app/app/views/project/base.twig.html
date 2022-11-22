@@ -26,11 +26,12 @@
 {% endblock %}
 
 {% block content %}
+{% set rand_id = random(7000, 8000) %}
 
-<div class="bg-primary/25 my-10 py-10 p-5 rounded-md" style="width: 80vw">
+<div class="bg-primary/25 my-10 p-5 pt-10 pb-3 rounded-md" style="width: 80vw">
     <progress class="progress progress-primary bg-primary/25" value="{{ progress }}" max="100"></progress>
 
-    <form action="{{ form_url }}{{ currentPage }}" method="post">
+    <form id="{{ rand_id }}" action="{{ form_url }}{{ currentPage }}" method="post">
         <div class="grid sm:grid-cols-4 gap-4 {% if currentPage != 0 %}hidden{% endif %}">
             {% include 'project/general.twig.html' %}
         </div>
@@ -48,9 +49,9 @@
 
         <div class="col-span-4 text-end mt-4">
             {% if currentPage != 0 %}
-            <a href="{{ form_url }}{{ currentPage - 1 }}" class="btn btn-primary btn-outline">Zurück</a>
+            <button type="button" class="btn btn-primary btn-outline" onclick="{ var form = document.getElementById('{{ rand_id }}'); form.action = '{{ form_url }}{{ currentPage }}/1'; form.submit(); }">Previous</button>
             {% endif %}
-            <button class="btn btn-primary">Weiter</button>
+            <button class="btn btn-primary">Next</button>
         </div>
 
     </form>
