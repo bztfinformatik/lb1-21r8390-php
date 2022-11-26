@@ -25,7 +25,8 @@ class Dashboard extends Controller
     {
         $this->logger->log('Showing the dashboard', Logger::DEBUG);
 
-        $projects = $this->projectRepository->getAllProjects(SessionManager::getCurrentUserId());
+        $isAdmin = SessionManager::hasRole($this->loadEnum('role', 'admin')->value);
+        $projects = $this->projectRepository->getAllProjects(SessionManager::getCurrentUserId(), $isAdmin);
 
         $this->render('dashboard/index', array('projects' => $projects));
     }

@@ -36,7 +36,8 @@ class ProjectController extends Controller
     public function delete(int $projectId = -1)
     {
         if ($projectId > 0) {
-            $this->projectRepository->delete($projectId, SessionManager::getCurrentUserId());
+            $isAdmin = SessionManager::hasRole($this->loadEnum('role', 'admin')->value);
+            $this->projectRepository->delete($projectId, SessionManager::getCurrentUserId(), $isAdmin);
         }
 
         redirect('', true);
@@ -72,10 +73,16 @@ class ProjectController extends Controller
      * @param int $maxPage The maximum page of the process
      * @param bool $prev Indicates if the user wants to go back to the previous step
      */
-    public function edit(int $projectId, int $currentStep = 0, bool $prev = false)
+    public function edit(int $projectId = 0, int $currentStep = 0, bool $prev = false)
     {
+        if ($projectId <= 0) {
+            redirect($this::class . '/create', true);
+            return;
+        }
+
         // Get the project from the database
-        $project = $this->projectRepository->getProjectById($projectId, SessionManager::getCurrentUserId());
+        $isAdmin = SessionManager::hasRole($this->loadEnum('role', 'admin')->value);
+        $project = $this->projectRepository->getProjectById($projectId, SessionManager::getCurrentUserId(), $isAdmin);
 
         // Check if the project exists
         if ($project === null) {
@@ -163,7 +170,7 @@ class ProjectController extends Controller
      * @param boolean $isPost Whether the form was submitted
      * @return array The data to pass to the view
      */
-    public function generalPage(Project $project = null, bool $isPost): array
+    public function generalPage(Project|null $project, bool $isPost): array
     {
         // Init the form data
         $data = [
@@ -204,8 +211,11 @@ class ProjectController extends Controller
 
             // Validate the data
             $data['title_err'] = $this->validateLength('title', $title, 2, 60);
-            if (empty($data['title_err']) && $this->projectRepository->existsProjectWithName($title, isset($project) ? $project->id : -1, SessionManager::getCurrentUserId())) {
-                $data['title_err'] = 'A project with this name already exists';
+            if (empty($data['title_err'])) {
+                $isAdmin = SessionManager::hasRole($this->loadEnum('role', 'admin')->value);
+                if (!$isAdmin && $this->projectRepository->existsProjectWithName($title, isset($project) ? $project->id : -1, SessionManager::getCurrentUserId())) {
+                    $data['title_err'] = 'A project with this name already exists';
+                }
             }
 
             $data['description_err'] = $this->validateLength('description', $description, 10, 255);
@@ -242,7 +252,7 @@ class ProjectController extends Controller
      * @param boolean $isPost Whether the form was submitted
      * @return array The data to pass to the view
      */
-    public function appearencePage(Project $project = null, bool $isPost): array
+    public function appearencePage(Project|null $project, bool $isPost): array
     {
         // Init the form data
         $data = [
@@ -299,7 +309,7 @@ class ProjectController extends Controller
      * @param boolean $isPost Whether the form was submitted
      * @return array The data to pass to the view
      */
-    public function structurePage(Project $project = null, bool $isPost): array
+    public function structurePage(Project|null $project, bool $isPost): array
     {
         // Init the form data
         $defaultJson = '[ "docs" ]';
@@ -338,7 +348,7 @@ class ProjectController extends Controller
      * @param boolean $isPost Whether the form was submitted
      * @return array The data to pass to the view
      */
-    public function evaluationPage(Project $project = null, bool $isPost): array
+    public function evaluationPage(Project|null $project, bool $isPost): array
     {
         $data = [
             'comment' => '',
@@ -463,7 +473,7 @@ class ProjectController extends Controller
 
         if (empty($logo)) {
             $error = 'The logo is required';
-        } elseif (!(preg_match('/^data:image\/\w+;base64,.*/i', $logo) || filter_var($logo, FILTER_VALIDATE_URL))) {
+        } elseif (!(preg_match('/^data:image\/[\w+]+;base64,.*/i', $logo) || filter_var($logo, FILTER_VALIDATE_URL))) {
             $error = 'The logo must be a valid base64 encoded image';
         } elseif (ceil(((strlen($logo) * 6) / 8) / 1024) > 512) {
             // Check if the logo is bigger than 512KB

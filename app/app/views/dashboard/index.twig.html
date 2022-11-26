@@ -66,7 +66,7 @@
             </div>
         </div>
 
-        <p>{{ project.description }}</p>
+        <p>{{ project.description|nl2br }}</p>
 
         {% if project.status.name == 'IN_PROGRESS' %}
         <div class="badge badge-info gap-2">
