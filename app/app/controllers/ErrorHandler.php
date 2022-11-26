@@ -33,4 +33,15 @@ class ErrorHandler extends Controller
     {
         $this->render('error/404', ['notFoundPage' => $page]);
     }
+
+    /**
+     * Shows the 500 page
+     *
+     * @param Throwable $error The error that occurred
+     */
+    public function internalServerError(Throwable $error)
+    {
+        header('HTTP/1.1 500 Internal Server Error');
+        $this->render('error/500', ['error' => $error->getMessage()]);
+    }
 }

@@ -52,7 +52,11 @@ class UserRepository extends BaseRepository
         $this->db->bind(':verificationCode', $user->verificationCode ?? '');
 
         // Execute the query
-        $this->db->execute();
+        if ($this->db->execute()) {
+            $this->logger->log("User '$user->email' saved successfully", Logger::INFO);
+        } else {
+            $this->throwError("Failed to save user '$user->email' to the database");
+        }
     }
 
     /**
@@ -74,10 +78,15 @@ class UserRepository extends BaseRepository
         $this->db->bind(':id', $user->id);
 
         // Delete the user
-        $this->db->execute();
+        if (!$this->db->execute() || $this->db->rowCount() == 0) {
+            $this->throwError("Failed to delete user '$user->email' from the database");
+        }
+        if ($this->db->rowCount() > 1) {
+            $this->throwError("Deleted more than one user with id '$user->id' from the database");
+        }
 
-        // Check if the user was deleted
-        return $this->db->rowCount() > 0;
+        $this->logger->log("User '$user->email' deleted successfully", Logger::DEBUG);
+        return true;
     }
 
     /**
@@ -97,6 +106,10 @@ class UserRepository extends BaseRepository
         // Get the result
         $result = $this->db->single();
 
+        if (!isset($result) || $result === false) {
+            $this->throwError("Failed to read user with the id '$id' from the database");
+        }
+
         // Return the user if found
         return $this->loadUser($result);
     }
@@ -112,8 +125,8 @@ class UserRepository extends BaseRepository
         $this->logger->log("Searching for a user by the email '$email'", Logger::DEBUG);
 
         // Get the user
-        $this->db->query('SELECT * FROM user WHERE email = :email LIMIT 1');
-        $this->db->bind(':email', $email);
+        $this->db->query('SELECT * FROM user WHERE UPPER(email) = :email LIMIT 1');
+        $this->db->bind(':email', strtoupper($email));
 
         // Get the result
         $result = $this->db->single();

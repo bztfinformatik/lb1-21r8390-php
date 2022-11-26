@@ -26,8 +26,13 @@ class App
         // Gets all parameters which are not null to be passed to the method
         $this->params = isset($url) ? array_values($url) : [];
 
-        // Call the method with the parameters of the controller
-        call_user_func_array([$this->controller, $this->method], $this->params);
+        try {
+            // Call the method with the parameters of the controller
+            call_user_func_array([$this->controller, $this->method], $this->params);
+        } catch (Throwable $th) {
+            // Call the error handler
+            $this->callErrorHandler($th);
+        }
     }
 
     /**
@@ -107,5 +112,26 @@ class App
             $this->method = $url[1];
             unset($url[1]);
         }
+    }
+
+    /**
+     * Calls the error handler
+     *
+     * @param Throwable $th The exception which was thrown
+     * @return void
+     */
+    private function callErrorHandler(Throwable $th)
+    {
+        // Load the error handler
+        require_once '../app/controllers/' . $this->ERROR_CONTROLLER . '.php';
+
+        // Gets the controller name
+        $controllerName = resolveComponentName($this->ERROR_CONTROLLER);
+
+        // Create the controller
+        $this->controller = new $controllerName;
+
+        // Call the error handler
+        $this->controller->internalServerError($th);
     }
 }

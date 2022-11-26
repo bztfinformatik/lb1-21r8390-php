@@ -61,4 +61,16 @@ class BaseRepository
     {
         return loadEnumHelper($enum, $value, $this->logger);
     }
+
+    /**
+     * Throws an exception and logs it
+     *
+     * @param string $error The error message
+     * @throws Exception The exception that was thrown
+     */
+    protected function throwError(string $error)
+    {
+        $this->logger->log($error, Logger::ERROR);
+        throw new Exception($error);
+    }
 }

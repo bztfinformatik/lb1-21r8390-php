@@ -24,12 +24,14 @@ class ProjectRepository extends BaseRepository
             // Insert the project
             $this->db->query('INSERT INTO project (userId, title, description, createdAt, fromDate, toDate, docsRepo, codeRepo, wantReadme, wantIgnore, wantCSS, wantJS, wantPages, color, font, wantDarkMode, wantCopyright, wantSearch, wantTags, logo, wantJournal, wantExamples, structure, confirmedBy, comment, status, downloadUrl) 
                 VALUES (:userId, :title, :description, :createdAt, :fromDate, :toDate, :docsRepo, :codeRepo, :wantReadme, :wantIgnore, :wantCSS, :wantJS, :wantPages, :color, :font, :wantDarkMode, :wantCopyright, :wantSearch, :wantTags, :logo, :wantJournal, :wantExamples, :structure, :confirmedBy, :comment, :status, :downloadUrl)');
+
+            $this->db->bind(':userId', $project->userId);
         } else {
             $this->logger->log("Updating project '$project->title' in the database", Logger::INFO);
 
             // Update the project
             $this->db->query('UPDATE project SET
-                userId = :userId, title = :title, description = :description, createdAt = :createdAt, fromDate = :fromDate, toDate = :toDate,
+                title = :title, description = :description, createdAt = :createdAt, fromDate = :fromDate, toDate = :toDate,
                 docsRepo = :docsRepo, codeRepo = :codeRepo, wantReadme = :wantReadme, wantIgnore = :wantIgnore, wantCSS = :wantCSS, wantJS = :wantJS,
                 wantPages = :wantPages, color = :color, font = :font, wantDarkMode = :wantDarkMode, wantCopyright = :wantCopyright, wantSearch = :wantSearch,
                 wantTags = :wantTags, logo = :logo, wantJournal = :wantJournal, wantExamples = :wantExamples, structure = :structure, confirmedBy = :confirmedBy,
@@ -40,7 +42,6 @@ class ProjectRepository extends BaseRepository
         }
 
         // Bind the parameters
-        $this->db->bind(':userId', $project->userId);
         $this->db->bind(':title', $project->title);
         $this->db->bind(':description', $project->description);
         $this->db->bind(':createdAt', $project->createdAt);
@@ -68,10 +69,12 @@ class ProjectRepository extends BaseRepository
         $this->db->bind(':status', $project->status->value);
         $this->db->bind(':downloadUrl', $project->downloadUrl);
 
-        echo var_dump($project->status->value);
-
         // Execute the query
-        $this->db->execute();
+        if ($this->db->execute()) {
+            $this->logger->log("Project '$project->title' saved or updated successfully", Logger::INFO);
+        } else {
+            $this->throwError("Project '$project->title' could not be saved or updated");
+        }
     }
 
     /**
@@ -79,36 +82,50 @@ class ProjectRepository extends BaseRepository
      *
      * @param int $projectId The ID of the project
      * @param int $userId The ID of the user
+     * @param bool $isAdmin Whether the user is an admin
      */
-    public function delete(int $projectId, int $userId)
+    public function delete(int $projectId, int $userId, bool $isAdmin)
     {
         $this->logger->log("Deleting project with ID '$projectId' from the database", Logger::INFO);
 
         // Delete the project
-        $this->db->query('DELETE FROM project WHERE id = :id AND userId = :userId LIMIT 1');
+        $query = 'DELETE FROM project WHERE id = :id';
+        if (!$isAdmin) {
+            $query .= ' AND userId = :userId';
+        }
+        $this->db->query($query . 'LIMIT 1');
+
         $this->db->bind(':id', $projectId);
-        $this->db->bind(':userId', $userId);
+        if (!$isAdmin) {
+            $this->db->bind(':userId', $userId);
+        }
 
-        // Execute the query
-        $this->db->execute();
-
-        // Check if the user was deleted
-        return $this->db->rowCount() > 0;
+        // Execute the query and validate the result
+        if ($this->db->execute() === false || $this->db->rowCount() == 0) {
+            $this->throwError("Project with ID '$projectId' could not be deleted");
+        }
+        if ($this->db->rowCount() > 1) {
+            $this->throwError("Project with ID '$projectId' was deleted more than once");
+        }
+        $this->logger->log("Project with ID '$projectId' was successfully deleted", Logger::INFO);
     }
 
     /**
      * Returns all projects from a user
      *
      * @param integer $userId The ID of the user
+     * @param bool $isAdmin Whether the user is an admin
      * @return array The projects
      */
-    public function getAllProjects(int $userId): array
+    public function getAllProjects(int $userId, bool $isAdmin): array
     {
         $this->logger->log("Reading all projects from the database", Logger::DEBUG);
 
         // Get the projects
-        $this->db->query('SELECT * FROM project WHERE userId = :userId ORDER BY createdAt DESC, status ASC');
-        $this->db->bind(':userId', $userId);
+        $this->db->query('SELECT * FROM project' . ($isAdmin ? '' : ' WHERE userId = :userId') . ' ORDER BY createdAt DESC, status ASC');
+        if (!$isAdmin) {
+            $this->db->bind(':userId', $userId);
+        }
 
         // Get the results
         $results = $this->db->all();
@@ -119,6 +136,8 @@ class ProjectRepository extends BaseRepository
             $projects[] = $this->loadProject($result);
         }
 
+        $this->logger->log("Read " . count($projects) . " projects from the database by user '$userId'", Logger::DEBUG);
+
         return $projects;
     }
 
@@ -127,19 +146,33 @@ class ProjectRepository extends BaseRepository
      *
      * @param integer $projectId The ID of the project
      * @param integer $userId The ID of the user
+     * @param bool $isAdmin Whether the user is an admin
      * @return Project The project with the given ID
      */
-    public function getProjectById(int $projectId, int $userId): Project
+    public function getProjectById(int $projectId, int $userId, bool $isAdmin): Project|null
     {
         $this->logger->log("Getting project with ID '$projectId' from the database", Logger::DEBUG);
 
         // Get the project
-        $this->db->query('SELECT * FROM project WHERE id = :id AND userId = :userId LIMIT 1');
+        $query = 'SELECT * FROM project WHERE id = :id';
+        if (!$isAdmin) {
+            $query .= ' AND userId = :userId';
+        }
+        $this->db->query($query .  ' LIMIT 1');
+
         $this->db->bind(':id', $projectId);
-        $this->db->bind(':userId', $userId);
+
+        if (!$isAdmin) {
+            $this->db->bind(':userId', $userId);
+        }
 
         // Get the result
         $result = $this->db->single();
+
+        // Check if the project was found
+        if (!isset($result) || $result === false) {
+            $this->throwError("Project with ID '$projectId' could not be found");
+        }
 
         // Return the project if found
         return $this->loadProject($result);
