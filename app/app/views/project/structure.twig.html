@@ -7,6 +7,121 @@
     {{ inputs.toggle('Examples', 'wantExamples', data.wantExamples, 'Do you want a page that shows all possible MkDocs components?') }}
 </div>
 
-<div class="col-span-4">
-    {{ inputs.textarea('structure', data.structure, data.structure_err, 6, 10000) }}
+<div class="col-span-4 bg-primary/25 py-1">
+    <div id="jstree_container" style="min-height: 30vh">
+    </div>
 </div>
+<div class="col-span-4">
+    <input type="hidden" name="structure" value="{{ data.structure }}">
+    {% if data.structure_err is not empty %}
+    <label class="label">
+        <span class="leading-3 text-xs text-red-500">{{ data.structure_err }}</span>
+    </label>
+    {% endif %}
+    <small>Create the structure of your documentation here. Right-click to display a context menu.</small>
+</div>
+
+<script src="/js/jquery.js"></script>
+<script src="/js/jstree.min.js"></script>
+<script>
+    $(function () {
+        var structure_data = JSON.parse('{{ data.structure|e("js") }}');
+
+        $("#jstree_container")
+            .jstree({
+                core: {
+                    themes: {
+                        variant: window.screen.width < 768 ? 'large' : 'small',
+                        icons: true,
+                        dots: true,
+                    },
+                    check_callback: true,
+                    multiple: false,
+                    force_text: true,
+                    data: structure_data,
+                },
+                'contextmenu': {
+                    'items': function (node) {
+                        var tmp = $.jstree.defaults.contextmenu.items();
+                        delete tmp.ccp;
+                        delete tmp.create.action;
+                        tmp.create.label = "New";
+                        tmp.create.submenu = {
+                            "create_folder": {
+                                "separator_after": true,
+                                "label": "Folder",
+                                "action": function (data) {
+                                    var inst = $.jstree.reference(data.reference),
+                                        obj = inst.get_node(data.reference);
+                                    inst.create_node(obj, { type: "folder" }, "last", function (new_node) {
+                                        setTimeout(function () { inst.edit(new_node); }, 0);
+                                    });
+                                }
+                            },
+                            "create_file": {
+                                "label": "File",
+                                "action": function (data) {
+                                    var inst = $.jstree.reference(data.reference),
+                                        obj = inst.get_node(data.reference);
+                                    inst.create_node(obj, { type: "file" }, "last", function (new_node) {
+                                        setTimeout(function () { inst.edit(new_node); }, 0);
+                                    });
+                                }
+                            }
+                        };
+                        if (this.get_type(node) === "file") {
+                            delete tmp.create;
+                        }
+                        if (this.get_type(node) === "default") {
+                            delete tmp.rename;
+                            delete tmp.remove;
+                        }
+                        return tmp;
+                    }
+                },
+                types: {
+                    default: {
+                        icon: 'root-icon',
+                        valid_children: ['folder', 'file'],
+                    },
+                    folder: {
+                        icon: 'folder-icon',
+                        valid_children: ['folder', 'file'],
+                    },
+                    file: {
+                        icon: 'file-icon',
+                        valid_children: [],
+                    }
+                },
+                plugins: ["wholerow", "changed", "types", "contextmenu", "dnd", "sort", "unique"],
+            })
+            .bind("create_node.jstree", function (e, data) {
+                getStructure();
+            })
+            .bind("move_node.jstree", function (e, data) {
+                getStructure();
+            })
+            .bind("delete_node.jstree", function (e, data) {
+                getStructure();
+            })
+            .bind("rename_node.jstree", function (e, data) {
+                getStructure();
+            })
+            .bind("copy_node.jstree", function (e, data) {
+                getStructure();
+            })
+            .bind("loaded.jstree", function (e, data) {
+                console.log("Tree loaded");
+            });
+
+        var text = $("#jstree_container").jstree(true).get_json("#", { flat: true });
+        console.log(JSON.stringify(text));
+    });
+
+    function getStructure() {
+        var text = $("#jstree_container").jstree(true).get_json("#", { flat: true });
+        console.debug('Updating structure');
+        console.debug(JSON.stringify(text));
+        $("input[name=structure]").val(JSON.stringify(text));
+    }
+</script>
