@@ -1,3 +1,5 @@
+-- Creates the user table
+
 SET NAMES utf8;
 SET time_zone = '+00:00';
 SET foreign_key_checks = 0;
@@ -12,10 +14,10 @@ CREATE TABLE IF NOT EXISTS `user` (
   `wantsUpdates` tinyint(1) unsigned NOT NULL DEFAULT 1,
   `password` varchar(255) NOT NULL,
   `salt` varchar(70) NOT NULL,
-  `role` varchar(255) NOT NULL,
+  `role` tinyint(4) unsigned NOT NULL,
   `profilePicture` longtext DEFAULT NULL,
   `isVerified` tinyint(1) NOT NULL,
   `verificationCode` varchar(255) DEFAULT NULL,
   `createdAt` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

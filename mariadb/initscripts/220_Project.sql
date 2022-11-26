@@ -1,3 +1,5 @@
+-- Creates the user table
+
 SET NAMES utf8;
 SET time_zone = '+00:00';
 SET foreign_key_checks = 0;
@@ -38,5 +40,5 @@ CREATE TABLE IF NOT EXISTS `project` (
   KEY `userId` (`userId`),
   KEY `confirmedBy` (`confirmedBy`),
   CONSTRAINT `project_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `project_ibfk_2` FOREIGN KEY (`confirmedBy`) REFERENCES `user` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `project_ibfk_2` FOREIGN KEY (`confirmedBy`) REFERENCES `user` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

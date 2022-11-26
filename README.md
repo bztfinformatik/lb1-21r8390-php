@@ -1,4 +1,4 @@
-# PHP - Doku
+# PHP - LB
 
 ---
 
@@ -24,7 +24,11 @@ Falls die Konfiguration mit dem **ELK-Stack** nicht funktioniert, kann auch das 
 
 ## Anmelden
 
-Die **Anmeldung** kann über den Benutzer `test@example.com` mit dem Passwort `Test123!Test123!` erfolgen. Das erstellen eines neuen Benutzers ist durch die Mocks nicht möglich.
+| Benutzername            | Passwort       |
+| :---------------------- | :------------- |
+| admin@example.com       | Test123Test123 |
+| verified@example.com    | Test123Test123 |
+| notverified@example.com | Test123Test123 |
 
 ## Commits
 
@@ -47,7 +51,5 @@ Es fehlt nur noch die **Datenbank**, **Downloads**, **Email** und der Datei View
 
 ### TODO:
 
--   Datenbank
 -   Emails
 -   Download
--   Datei Viewer
