@@ -1,3 +1,19 @@
 .tooltip::before {
 	z-index: 5;
 }
+
+/* jsTree Styles */
+.root-icon {
+	background-image: url(../img/file-root.svg) !important;
+	background-size: contain !important;
+}
+
+.folder-icon {
+	background-image: url(../img/file-folder.svg) !important;
+	background-size: contain !important;
+}
+
+.file-icon {
+	background-image: url(../img/file.svg) !important;
+	background-size: contain !important;
+}

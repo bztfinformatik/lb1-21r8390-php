@@ -302,7 +302,7 @@ class ProjectController extends Controller
     public function structurePage(Project $project = null, bool $isPost): array
     {
         // Init the form data
-        $defaultJson = '{ "docs": { "css": "folder", "mkdocs.yml": "file"}}';
+        $defaultJson = '[ "docs" ]';
 
         $data = [
             'wantJournal' => '',
@@ -324,7 +324,7 @@ class ProjectController extends Controller
             $data['wantJournal'] = $project->wantJournal;
             $data['wantExamples'] = $project->wantExamples;
 
-            $data['structure'] = isset($project->structure) ? $project->structure :  $defaultJson;
+            $data['structure'] = isset($project->structure) && !empty($project->structure) ? $project->structure :  $defaultJson;
         }
 
         // Return the data
