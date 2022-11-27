@@ -607,20 +607,17 @@ class ProjectController extends Controller
                     // Set the id of the project
                     $newProject->id = $project->id;
 
-                    // Check if the comment changed
-                    if ($project->comment != $newProject->comment) {
-                        // Set the confirmed by
-                        $newProject->confirmedBy = SessionManager::getCurrentUserId();
-                    }
-
                     // Check if the status has changed
                     if ($project->status->value != $newProject->status->value) {
+                        // Set the confirmed by
+                        $newProject->confirmedBy = SessionManager::getCurrentUserId();
+
                         // Load the user repository
                         $userRepository = $this->loadRepository('UserRepository');
                         $owner = $userRepository->getUserById($project->userId);
 
                         // Check if the owner exists
-                        if (isset($owner)) {
+                        if (isset($owner) && $owner->wantsUpdates) {
                             // Project URL
                             $projectUrl = URLROOT . '/ProjectController/edit/' . $newProject->id . '/3';
 
