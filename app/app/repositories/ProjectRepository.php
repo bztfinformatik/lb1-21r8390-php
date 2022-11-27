@@ -82,23 +82,15 @@ class ProjectRepository extends BaseRepository
      *
      * @param int $projectId The ID of the project
      * @param int $userId The ID of the user
-     * @param bool $isAdmin Whether the user is an admin
      */
-    public function delete(int $projectId, int $userId, bool $isAdmin)
+    public function delete(int $projectId, int $userId)
     {
         $this->logger->log("Deleting project with ID '$projectId' from the database", Logger::INFO);
 
         // Delete the project
-        $query = 'DELETE FROM project WHERE id = :id';
-        if (!$isAdmin) {
-            $query .= ' AND userId = :userId';
-        }
-        $this->db->query($query . 'LIMIT 1');
-
+        $this->db->query('DELETE FROM project WHERE id = :id AND userId = :userId LIMIT 1');
         $this->db->bind(':id', $projectId);
-        if (!$isAdmin) {
-            $this->db->bind(':userId', $userId);
-        }
+        $this->db->bind(':userId', $userId);
 
         // Execute the query and validate the result
         if ($this->db->execute() === false || $this->db->rowCount() == 0) {

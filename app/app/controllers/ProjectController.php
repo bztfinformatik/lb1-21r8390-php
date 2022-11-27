@@ -36,8 +36,7 @@ class ProjectController extends Controller
     public function delete(int $projectId = -1)
     {
         if ($projectId > 0) {
-            $isAdmin = SessionManager::hasRole($this->loadEnum('role', 'admin')->value);
-            $this->projectRepository->delete($projectId, SessionManager::getCurrentUserId(), $isAdmin);
+            $this->projectRepository->delete($projectId, SessionManager::getCurrentUserId());
         }
 
         redirect('', true);
