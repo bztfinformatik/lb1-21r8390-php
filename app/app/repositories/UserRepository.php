@@ -136,27 +136,6 @@ class UserRepository extends BaseRepository
     }
 
     /**
-     * Gets the user by the verification code
-     *
-     * @param string $verificationCode The verification code of the user
-     * @return User The user if found, `null` otherwise
-     */
-    public function getUserByVerificationCode(string $verificationCode): User|null
-    {
-        $this->logger->log("Searching for a user by the verification code '$verificationCode'", Logger::DEBUG);
-
-        // Get the user
-        $this->db->query('SELECT * FROM user WHERE verificationCode = :verificationCode LIMIT 1');
-        $this->db->bind(':verificationCode', $verificationCode);
-
-        // Get the result
-        $result = $this->db->single();
-
-        // Check if the user was found
-        return $this->loadUser($result);
-    }
-
-    /**
      * Gets all the users from the database ordered by the creation date
      *
      * @return User[] All the users from the database

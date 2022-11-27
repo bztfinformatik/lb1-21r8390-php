@@ -32,7 +32,7 @@ class LogManager
             $this->logger->pushHandler($handler);
         }
 
-        $this->log('The logger has been initialized', Logger::NOTICE);
+        $this->log('The logger has been initialized', Logger::DEBUG);
     }
 
     /**

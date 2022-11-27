@@ -1,8 +1,6 @@
 version: "3.8"
 
 volumes:
-    # mysqldata:
-    # mysqlinit:
     app:
 
 networks:
@@ -36,6 +34,8 @@ services:
             - DB_NAME=${DB_NAME}
             - DB_USER=${DB_USER}
             - DB_PASSWD=${DB_PASSWORD}
+            - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+            - EMAIL_FROM=${EMAIL_FROM}
         healthcheck:
             test: curl --fail -s http://localhost:80 || exit 1
             interval: 60s

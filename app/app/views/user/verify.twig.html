@@ -1,0 +1,46 @@
+{% extends "base/main.twig.html" %}
+
+{% import "input/inputs.twig.html" as inputs %}
+
+{% block navlinks %}
+<a href="/login/signIn" class="flex-0 btn btn-ghost px-2 text-base-content">Sign In</a>
+<a href="/login/signUp" class="flex-0 btn btn-outline btn-ghost px-2 text-base-content">Sign Up</a>
+{% endblock %}
+
+{% block content %}
+{% if is_valid %}
+
+<div class="grid grid-cols-3 gap-4 py-4 mx-5 place-content-center">
+    <div class="col-span-3 md:col-span-2 shadow-2xl bg-base-100 p-5 rounded-md md:w-4/6 place-self-center">
+        <form action="{{ form_url }}" method="post" enctype="multipart/form-data">
+            <h2 class="card-title">Password Reset</h2>
+            <hr class="mt-2" />
+
+            {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
+
+            <input type="hidden" name="token" value="{{ data.token }}">
+
+            <div class="form-control mt-5">
+                <button type="submit" class="btn btn-active btn-primary">Reset</button>
+            </div>
+        </form>
+    </div>
+
+    <img src="/img/verification.svg" alt="verification illustration" class="h-full hidden md:block hover:scale-125 transition-all duration-700" />
+</div>
+
+{% else %}
+
+<div class="grid grid-cols-1 gap-4 place-content-center">
+    <div class="h-80 w-64 place-self-center">
+        <img src="/img/verification.svg" alt="verification illustration">
+        <h4 class="text-center underline decoration-pink-500 font-semibold tracking-wide">Invalid Verification</h4>
+    </div>
+    <div class="text-center">
+        <p class="pb-5">Your verification code is invalid! You may have already used it.</p>
+        <a href="/login" class="btn btn-outline btn-primary">Login</a>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}
