@@ -149,7 +149,7 @@ class UserController extends Controller
                     try {
                         // Send the verification email
                         $sg = new SendgridService();
-                        $sg->sendVerification($name, $email, $user->verificationCode);
+                        $sg->sendVerification($name, $email, $email . $this->getSaltSeparator() . $user->verificationCode);
 
                         // Inform the user that the email was sent
                         $message_title = 'Next steps - Verification';
@@ -310,7 +310,7 @@ class UserController extends Controller
 
                 // Send the verification email
                 $sg = new SendgridService();
-                $sg->sendVerification($name, $email, $user->verificationCode);
+                $sg->sendVerification($name, $email, $email . $this->getSaltSeparator() . $user->verificationCode);
 
                 // Inform the user that the email was sent
                 // Send the verification email
@@ -380,7 +380,7 @@ class UserController extends Controller
         ];
 
         // Get the index of last $ from the token
-        $lastToken = strrpos($token, '$');
+        $lastToken = strrpos($token, $this->getSaltSeparator());
         if ($lastToken !== false) {
             // Get the user id and the verification token
             $userEmail = substr($token, 0, $lastToken);
@@ -485,7 +485,7 @@ class UserController extends Controller
                 try {
                     // Send the verification email
                     $sg = new SendgridService();
-                    $sg->sendVerification($user->name, $user->email, $user->verificationCode);
+                    $sg->sendVerification($user->name, $user->email, $user->email . $this->getSaltSeparator() . $user->verificationCode);
 
                     // Inform the user that the email was sent
                     $message_title = 'Credential Reset';

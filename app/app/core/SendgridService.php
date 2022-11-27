@@ -64,10 +64,9 @@ class SendgridService
         $email->addTo($emailTo, $name);
         $email->setTemplateId(new TemplateId($this->verificationTemplateId));
 
-        // === Here comes the dynamic template data! ===
         $email->addDynamicTemplateDatas([
             'name'     => $name,
-            'verification_url' => URLROOT . "/UserController/verify/$emailTo$$token",
+            'verification_url' => URLROOT . "/UserController/verify/$token",
         ]);
 
         $this->logger->log('Sending verification email to ' . $emailTo, Logger::DEBUG);
@@ -77,10 +76,6 @@ class SendgridService
             $this->logger->log('Verification email sent successfully to ' . $emailTo, Logger::INFO);
         }
     }
-
-    // public function sendStatusChanged()
-    // {
-    // }
 
     /**
      * Resolves the status code of the response
