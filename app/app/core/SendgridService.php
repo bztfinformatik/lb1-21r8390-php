@@ -52,6 +52,7 @@ class SendgridService
      */
     public function sendVerification(string $name, string $emailTo, string $token)
     {
+        // Validate the parameters
         if (empty($name) || empty($emailTo) || empty($token)) {
             $this->throwError('The name, email, and token are required to send a verification email');
         }
@@ -59,19 +60,68 @@ class SendgridService
             $this->throwError('The email address is not valid');
         }
 
+        $this->logger->log("Sending verification email to $emailTo", Logger::DEBUG);
+
+        // Create the email
         $email = new Mail();
         $email->setFrom(EMAIL_FROM, 'MkSimple');
         $email->addTo($emailTo, $name);
         $email->setTemplateId(new TemplateId($this->verificationTemplateId));
 
+        // Fill in the template variables
         $email->addDynamicTemplateDatas([
-            'name'     => $name,
+            'name' => $name,
             'verification_url' => URLROOT . "/UserController/verify/$token",
         ]);
 
-        $this->logger->log('Sending verification email to ' . $emailTo, Logger::DEBUG);
+        // Send the email
         $response = $this->sg->send($email);
 
+        // Check the response
+        if ($this->resolveStatusCode($response->statusCode())) {
+            $this->logger->log('Verification email sent successfully to ' . $emailTo, Logger::INFO);
+        }
+    }
+
+    /**
+     * Sends a status email to the given email address
+     *
+     * @param string $name The name of the user
+     * @param string $emailTo The email address of the user
+     * @param string $projectName The name of the project
+     * @param string $projectUrl The URL of the project
+     * @param string $status The status of the project
+     */
+    public function sendStatusChanged(string $name, string $emailTo, string $projectName, string $projectUrl, string $status)
+    {
+        // Validate the parameters
+        if (empty($name) || empty($emailTo) || empty($projectName) || empty($projectUrl) || empty($status)) {
+            $this->throwError('The name, email, project name, project URL, and status are required to send a status email');
+        }
+        if (!filter_var($emailTo, FILTER_VALIDATE_EMAIL)) {
+            $this->throwError('The email address is not valid');
+        }
+
+        $this->logger->log('Sending status change email to ' . $emailTo, Logger::DEBUG);
+
+        // Create the email
+        $email = new Mail();
+        $email->setFrom(EMAIL_FROM, 'MkSimple');
+        $email->addTo($emailTo, $name);
+        $email->setTemplateId(new TemplateId($this->statusTemplateId));
+
+        // Fill in the template variables
+        $email->addDynamicTemplateDatas([
+            'name' => $name,
+            'project_name' => $projectName,
+            'status' => $status,
+            'project_url' => $projectUrl,
+        ]);
+
+        // Send the email
+        $response = $this->sg->send($email);
+
+        // Check the response
         if ($this->resolveStatusCode($response->statusCode())) {
             $this->logger->log('Verification email sent successfully to ' . $emailTo, Logger::INFO);
         }
@@ -87,12 +137,17 @@ class SendgridService
     private function resolveStatusCode(int $statusCode): bool
     {
         if ($statusCode >= 200 && $statusCode < 300) {
+            // Success
             return true;
         }
+
         if ($statusCode == 429) {
-            $this->throwError('Too many requests');
+            // Too many requests (rate limit)
+            $this->throwError('Too many requests to SendGrid (max: 100 per day)');
             return false;
         }
-        $this->throwError('An unknown error occurred while sending the email');
+
+        // Other error
+        $this->throwError("An unknown error ($statusCode) occurred while sending the email");
     }
 }
