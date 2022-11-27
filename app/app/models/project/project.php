@@ -46,9 +46,4 @@ class Project
     public string $comment;
     public Status $status;
     public string $downloadUrl;
-
-    public function isInProgress(): bool
-    {
-        return $this->status === Status::IN_PROGRESS;
-    }
 }
