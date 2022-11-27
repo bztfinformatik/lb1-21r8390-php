@@ -12,3 +12,18 @@
 {% endif %}
 
 {% endmacro %}
+
+{% macro message_raw(modal_id, message_title, message) %}
+
+<input type="checkbox" id="{{ modal_id }}" class="modal-toggle" />
+<div class="modal">
+    <div class="modal-box relative">
+        <label for="{{ modal_id }}" class="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
+        <h3 class="text-lg font-bold">{{ message_title }}</h3>
+        <div class="py-4">
+            {{ message|raw }}
+        </div>
+    </div>
+</div>
+
+{% endmacro %}

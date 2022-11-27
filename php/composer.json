@@ -11,6 +11,7 @@
 	],
 	"require": {
 		"twig/twig": "^3.0",
-		"monolog/monolog": "^3.2"
+		"monolog/monolog": "^3.2",
+		"sendgrid/sendgrid": "~8"
 	}
 }

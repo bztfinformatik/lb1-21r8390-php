@@ -601,9 +601,37 @@ class ProjectController extends Controller
             if ($currentStep >= $maxPage && !$wantPrevious) {
                 // Save the project
                 $newProject = $this->loadProject($data);
-                if (isset($project)) {
+
+                // Check if the project is new
+                if (isset($project) && $project->id > 0) {
+                    // Set the id of the project
                     $newProject->id = $project->id;
+
+                    // Check if the status has changed
+                    if ($project->status->value != $newProject->status->value) {
+                        // Set the confirmed by
+                        $newProject->confirmedBy = SessionManager::getCurrentUserId();
+
+                        // Load the user repository
+                        $userRepository = $this->loadRepository('UserRepository');
+                        $owner = $userRepository->getUserById($project->userId);
+
+                        // Check if the owner exists
+                        if (isset($owner) && $owner->wantsUpdates) {
+                            // Project URL
+                            $projectUrl = URLROOT . '/ProjectController/edit/' . $newProject->id . '/3';
+
+                            // Inform the user about the status change
+                            $this->logger->log('The status of project ' . $newProject->id . ' has changed to ' . $newProject->status->value . ' by ' . SessionManager::getCurrentUserId(), Logger::INFO);
+                            $sg = new SendgridService();
+                            $sg->sendStatusChanged($owner->name, $owner->email, $newProject->title, $projectUrl, $newProject->status->name);
+                        } else {
+                            $this->logger->log('Owner of project ' . $newProject->id . ' does not exist', Logger::WARNING);
+                        }
+                    }
                 }
+
+                // // Save the project
                 $this->projectRepository->save($newProject);
                 redirect('', true);
             }

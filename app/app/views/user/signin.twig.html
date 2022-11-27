@@ -1,5 +1,6 @@
 {% extends "base/main.twig.html" %}
 {% set wantFooter = true %}
+{% set reset_modal = random(1000, 2000) %}
 
 {% import "input/inputs.twig.html" as inputs %}
 {% import "input/message.twig.html" as message %}
@@ -20,9 +21,9 @@
             {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
             {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
 
-            <div class="tooltip tooltip-bottom" data-tip="Stay calm! Think in silence and try again or open your password manager 😉">
-                <p class="underline underline-offset-4 pt-2">Forgot your password?</p>
-            </div>
+            {% if allow_reset %}
+            <label for="{{ reset_modal }}" class="underline underline-offset-4 pt-2">Forgot your password?</label>
+            {% endif %}
 
             <div class="form-control mt-5">
                 <button type="submit" class="btn btn-primary">Sign In</button>
@@ -35,6 +36,13 @@
 
 {% import "input/message.twig.html" as message %}
 
-{{ message.message('Verification error', message) }}
+{{ message.message(message_title, message) }}
+
+{% set password_reset %}
+<p>If you have forgotten your password or lost the verification email, you can reset it by clicking the button below. You will then receive a verification email where you can reset your password.</p>
+<a href="/UserController/passwordReset/{{ data.email|url_encode }}" class="btn btn-primary btn-sm mt-4">Reset credentials</a>
+{% endset %}
+
+{{ message.message_raw(reset_modal, 'Forgot your password?', password_reset) }}
 
 {% endblock %}

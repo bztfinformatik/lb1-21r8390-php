@@ -40,7 +40,7 @@ class Controller
             'autoescape' => 'html',
         ]);
 
-        $this->logger->log('The Twig has been initialized', Logger::NOTICE);
+        $this->logger->log('The Twig has been initialized', Logger::INFO);
     }
 
     /**

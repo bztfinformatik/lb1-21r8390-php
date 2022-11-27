@@ -43,6 +43,7 @@ class UserController extends Controller
             'password_err' => '',
         ];
         $message = '';
+        $allowReset = false;
 
         // Check if the form was submitted or requested
         if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
@@ -58,6 +59,10 @@ class UserController extends Controller
             if (empty($data['email_err']) && empty($data['password_err'])) {
                 // Check if the user exists and the password is correct
                 $user = $this->userRepository->getUserByEmail($email);
+
+                // Allow the user to reset the password if the account exists
+                $allowReset = isset($user);
+
                 if (!isset($user) || !password_verify($user->salt . $this->getSaltSeparator() . $password, $user->password)) {
                     $data['email_err'] = $data['password_err'] = 'The email or password is incorrect';
                 } else {
@@ -86,7 +91,9 @@ class UserController extends Controller
         $this->render('user/signin', [
             'form_url' => URLROOT . '/login/signIn',
             'data' => $data,
-            'message' => $message
+            'message_title' => 'Verification error',
+            'message' => $message,
+            'allow_reset' => $allowReset,
         ]);
     }
 
@@ -111,6 +118,7 @@ class UserController extends Controller
             'picture' => '',
             'picture_err' => '',
         ];
+        $message_title = '';
         $message = '';
 
         // Check if the form was submitted or requested
@@ -132,16 +140,36 @@ class UserController extends Controller
                 // Check if the user exists and the password is correct
                 $user = $this->userRepository->getUserByEmail($email);
                 if (!$user) {
+                    // Create the user
                     $user = $this->createUser($email, $password, $name, $picture);
 
-                    // Send the verification email
-                    // TODO: Popup with the message that the email has been sent
-                    $message = "The verification email has been sent. Please check your inbox.\nIf you don't see it, check your spam folder.";
-
+                    // Save the credentials to the database
                     $this->userRepository->save($user);
 
-                    // Log that the user has logged in
-                    $this->logger->log("User '$user->email' has successfully signed up", Logger::INFO);
+                    try {
+                        // Send the verification email
+                        $sg = new SendgridService();
+                        $sg->sendVerification($name, $email, $email . $this->getSaltSeparator() . $user->verificationCode);
+
+                        // Inform the user that the email was sent
+                        $message_title = 'Next steps - Verification';
+                        $message = "The verification email has been sent. Please check your inbox.\nIf you don't see it, check your spam folder.";
+
+                        // Log that the user has logged in
+                        $this->logger->log("User '$user->email' has successfully created an account", Logger::INFO);
+                    } catch (SendGridServiceException $e) {
+                        $this->logger->log("Failed to send the verification email to '$email'! Error Info:" . $e->getMessage(), Logger::ERROR);
+
+                        // Inform the user that the email was not sent
+                        $message_title = 'Verification failed - SendGrid error';
+                        $message = 'The verification email could not be sent. Please try again later. The error that occurred was' . $e->getMessage();
+                    } catch (Exception $e) {
+                        $message_title = 'Verification failed - Internal error';
+                        $this->logger->log("Failed to send the verification email to '$email'! Error Info:" . $e->getMessage(), Logger::ERROR);
+
+                        // Inform the user that the email was not sent
+                        $message = 'The verification email could not be sent. Please try again later. If the problem persists, contact the administrator.';
+                    }
                 } else {
                     $data['email_err'] = 'The email is already registered';
                     $this->logger->log("Sign up for user '$email' failed!", Logger::INFO);
@@ -155,7 +183,7 @@ class UserController extends Controller
         $this->render('user/signup', [
             'form_url' => URLROOT . '/login/signUp',
             'data' => $data,
-            'message_title' => 'Next steps - Verification',
+            'message_title' => $message_title,
             'message' => $message
         ]);
     }
@@ -266,7 +294,7 @@ class UserController extends Controller
      * @param string $password The password of the user
      * @param string $passwordPlaceholder The placeholder for the password
      */
-    private function saveUser(User &$user, string &$message_title, string &$message, string $name, string $email, bool $wantsUpdates, string $picture, string $password, string $passwordPlaceholder)
+    private function saveUser(User|null &$user, string &$message_title, string &$message, string $name, string $email, bool $wantsUpdates, string $picture, string $password, string $passwordPlaceholder)
     {
         // Load the user if it is not loaded yet
         if (!isset($user)) {
@@ -275,13 +303,35 @@ class UserController extends Controller
 
         // Check if email was changed
         if (strcasecmp($user->email, $email) != 0) {
-            // Send the verification email
-            $message_title = 'Verification needed';
-            $message = "Since you have changed your email address, we will send you a new verification link. Please confirm that this email is valid. Otherwise you will not be able to register!\n\nIf you don't see it, check your spam folder.";
+            try {
+                // Generate a verification token and send it to the user
+                $user->isVerified = false;
+                $user->verificationToken = $this->generateSalt();
 
-            // Generate a verification token and send it to the user
-            $user->isVerified = false;
-            $user->verificationToken = $this->generateSalt();
+                // Send the verification email
+                $sg = new SendgridService();
+                $sg->sendVerification($name, $email, $email . $this->getSaltSeparator() . $user->verificationCode);
+
+                // Inform the user that the email was sent
+                // Send the verification email
+                $message_title = 'Verification needed';
+                $message = "Since you have changed your email address, we will send you a new verification link. Please confirm that this email is valid. Otherwise you will not be able to register!\n\nIf you don't see it, check your spam folder.";
+
+                // Log that the email was changed and the verification email was sent
+                $this->logger->log("Email of user '$user->email' was changed to '$email'. Verification email was sent!", Logger::DEBUG);
+            } catch (SendGridServiceException $e) {
+                $this->logger->log("Failed to send the verification email to '$email'! Error Info:" . $e->getMessage(), Logger::ERROR);
+
+                // Inform the user that the email was not sent
+                $message_title = 'Verification failed - SendGrid error';
+                $message = 'The verification email could not be sent. Please try again later. The error that occurred was' . $e->getMessage();
+            } catch (Exception $e) {
+                $message_title = 'Verification failed - Internal error';
+                $this->logger->log("Failed to send the verification email to '$email'! Error Info:" . $e->getMessage(), Logger::ERROR);
+
+                // Inform the user that the email was not sent
+                $message = 'The verification email could not be sent. Please try again later. If the problem persists, contact the administrator.';
+            }
         }
 
         // Update the user
@@ -302,6 +352,173 @@ class UserController extends Controller
 
         // Log that the user has logged in
         $this->logger->log("User '$user->id' has successfully updated his profile", Logger::INFO);
+    }
+
+    /**
+     * Verifies or resets the password of the user with the given token
+     *
+     * @param string $token The token to verify the user
+     */
+    public function verify(string $token = '')
+    {
+        // Token schema: <user_id>$<verification_token>
+        // /UserController/verify/21r8390@bztf.ch$0f9a757c27935879fcb7da9d7995eb08098917414af3cbb894da9b71549c7a58
+        if (!isset($token) || empty($token)) {
+            redirect('', true);
+        }
+
+        $this->logger->log("Trying to verify token: '$token'", Logger::DEBUG);
+
+        // Check if the token is valid
+        $isValid = false;
+
+        // The data of the user
+        $data = [
+            'token' => $token,
+            'password' => '',
+            'password_err' => '',
+        ];
+
+        // Get the index of last $ from the token
+        $lastToken = strrpos($token, $this->getSaltSeparator());
+        if ($lastToken !== false) {
+            // Get the user id and the verification token
+            $userEmail = substr($token, 0, $lastToken);
+            $verificationToken = substr($token, $lastToken + 1);
+
+            // Get the user from the database
+            $user = $this->userRepository->getUserByEmail($userEmail);
+            if (!isset($user) || strcasecmp($user->verificationCode, $verificationToken) != 0) {
+                $isValid = false;
+                $this->logger->log("Verification token '$token' is invalid!", Logger::INFO);
+            } elseif ($user->isVerified) {
+                // The user is already verified so reset the password
+                $isValid = true;
+                if (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST') {
+                    // Get the password
+                    $data['password'] = $password = trim($_POST['password']);
+
+                    // Validate the password
+                    $data['password_err'] = $this->validatePassword($data['password']);
+
+                    // Only if there are no errors, try to register
+                    if (empty($data['password_err'])) {
+                        // Generate a salt and hash the password
+                        $user->salt = $this->generateSalt();
+                        $user->password = password_hash($user->salt . $this->getSaltSeparator() . $password, PASSWORD_DEFAULT);
+
+                        // Save the updates to the database
+                        $this->userRepository->save($user);
+                        SessionManager::login($user);
+
+                        // Log that the user has logged in
+                        $this->logger->log("User '$user->id' has successfully reset his password", Logger::INFO);
+
+                        // Redirect to the profile page
+                        redirect('UserController/profile', true);
+                    } else {
+                        $this->logger->log("User '$user->id' has tried to reset his password but the password was invalid", Logger::INFO);
+                    }
+                } else {
+                    $this->logger->log("User '$user->id' is already verified! Resetting password now.", Logger::INFO);
+                }
+            } else {
+                // Verify the user
+                $user->isVerified = true;
+                $user->verificationCode = '';
+                $this->userRepository->save($user);
+
+                // Save the credentials in the session
+                SessionManager::login($user);
+
+                // Log that the user has logged in
+                $this->logger->log("User '$user->id' was successfully verified and is now signed in", Logger::INFO);
+
+                // // Redirect to the dashboard
+                redirect('dashboard', true);
+            }
+        }
+
+        // Show the verification failed page
+        $this->render('user/verify', ['is_valid' => $isValid, 'token' => $token]);
+    }
+
+    /**
+     * Resets the password of the user with the given email
+     *
+     * @param string $email The email of the user as **url encoded** string
+     */
+    public function passwordReset(string $email = '')
+    {
+        // Check if the email is valid
+        if (!isset($email) || empty($email)) {
+            redirect('', true);
+        }
+
+        // Set form data
+        $data = [
+            'email' => '',
+            'email_err' => '',
+        ];
+        $message_title = '';
+        $message = '';
+
+        $this->logger->log("Trying to reset password for email: '$email'", Logger::DEBUG);
+
+        // Decoding the email
+        $data['email'] = $email = urldecode($email);
+
+        // Verify if the email is valid
+        $data['email_err'] = $this->validateEmail($email);
+
+        // Only if there are no errors, try to reset the password
+        if (empty($data['email_err'])) {
+            // Get the user from the database
+            $user = $this->userRepository->getUserByEmail($email);
+
+            // Check if the user exists
+            if (isset($user)) {
+                // Generate a new verification token and save it to the database
+                $user->verificationCode = $this->generateSalt();
+                $this->userRepository->save($user);
+
+                try {
+                    // Send the verification email
+                    $sg = new SendgridService();
+                    $sg->sendVerification($user->name, $user->email, $user->email . $this->getSaltSeparator() . $user->verificationCode);
+
+                    // Inform the user that the email was sent
+                    $message_title = 'Credential Reset';
+                    $message = "The password reset or account verification email was sent successfully. Please follow the information in the email to continue.Older verification codes are now no longer valid.\nIf you can't find the email, check your spam folder or the address you entered!";
+                } catch (SendGridServiceException $e) {
+                    $this->logger->log("Failed to send the password reset email to '$email'! Error Info:" . $e->getMessage(), Logger::ERROR);
+
+                    // Inform the user that the email was not sent
+                    $message_title = 'Reset failed - SendGrid error';
+                    $message = 'The reset email could not be sent. Please try again later. The error that occurred was' . $e->getMessage();
+                } catch (Exception $e) {
+                    $message_title = 'Reset failed - Internal error';
+                    $this->logger->log("Failed to send the reset email to '$email'! Error Info:" . $e->getMessage(), Logger::ERROR);
+
+                    // Inform the user that the email was not sent
+                    $message = 'The reset email could not be sent. Please try again later. If the problem persists, contact the administrator.';
+                }
+            } else {
+                $message_title = 'Password Reset Failed';
+                $message = "The email address you entered is not registered. Please try again or create a new account.";
+            }
+        } else {
+            $message_title = 'Password Reset Failed';
+            $message = 'The password could not be reset because the associated email is invalid. Please try again or contact the administrator!';
+        }
+
+        // Load the view
+        $this->render('user/signin', [
+            'form_url' => URLROOT . '/login/signIn',
+            'data' => $data,
+            'message_title' => $message_title,
+            'message' => $message,
+        ]);
     }
 
     #endregion
@@ -405,7 +622,7 @@ class UserController extends Controller
 
         if (empty($picture)) {
             $error = 'The picture is required';
-        } elseif (!preg_match('/^data:image\/\w+;base64,.*/i', $picture)) {
+        } elseif (!preg_match('/^data:image\/[\w+]+;base64,.*/i', $picture)) {
             $error = 'The picture must be a valid base64 encoded image';
         } elseif (ceil(((strlen($picture) * 6) / 8) / 1024) > 512) {
             // Check if the picture is bigger than 512KB
