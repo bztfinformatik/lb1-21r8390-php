@@ -15,4 +15,4 @@ require_once 'core/LogManager.php';
 require_once 'core/SessionManager.php';
 require_once 'core/Database.php';
 require_once 'core/Controller.php';
-require_once 'core/SendgridService.php';
+require_once 'services/SendgridService.php';
