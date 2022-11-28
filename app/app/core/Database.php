@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * An error thrown by the Database
+ */
+class DatabaseException extends Exception
+{
+}
+
+/**
  * PDO Database wrapper class
  * 
  * - Connect to Datebase

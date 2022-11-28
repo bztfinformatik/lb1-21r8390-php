@@ -613,20 +613,24 @@ class ProjectController extends Controller
                     } elseif ($project->status->value != $newProject->status->value) {
                         // Set the confirmed by
                         $newProject->confirmedBy = SessionManager::getCurrentUserId();
+                        $this->logger->log('The status of project ' . $newProject->id . ' has changed to ' . $newProject->status->value . ' by ' . $newProject->confirmedBy, Logger::INFO);
 
                         // Load the user repository
                         $userRepository = $this->loadRepository('UserRepository');
                         $owner = $userRepository->getUserById($project->userId);
 
                         // Check if the owner exists
-                        if (isset($owner) && $owner->wantsUpdates) {
-                            // Project URL
-                            $projectUrl = URLROOT . '/ProjectController/edit/' . $newProject->id . '/3';
+                        if (isset($owner)) {
+                            if ($owner->wantsUpdates) {
+                                // Project URL
+                                $projectUrl = URLROOT . '/ProjectController/edit/' . $newProject->id . '/3';
 
-                            // Inform the user about the status change
-                            $this->logger->log('The status of project ' . $newProject->id . ' has changed to ' . $newProject->status->value . ' by ' . SessionManager::getCurrentUserId(), Logger::INFO);
-                            $sg = new SendgridService();
-                            $sg->sendStatusChanged($owner->name, $owner->email, $newProject->title, $projectUrl, $newProject->status->name);
+                                // Inform the user about the status change
+                                $sg = new SendgridService();
+                                $sg->sendStatusChanged($owner->name, $owner->email, $newProject->title, $projectUrl, $newProject->status->name);
+                            } else {
+                                $this->logger->log('User ' . $owner->name . 'does not want to receive updates by mail', Logger::INFO);
+                            }
                         } else {
                             $this->logger->log('Owner of project ' . $newProject->id . ' does not exist', Logger::WARNING);
                         }

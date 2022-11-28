@@ -4,6 +4,9 @@ use Monolog\Logger;
 use \SendGrid\Mail\TemplateId;
 use \SendGrid\Mail\Mail;
 
+/**
+ * An error thrown by the SendGrid Service
+ */
 class SendGridServiceException extends Exception
 {
 }
@@ -123,7 +126,7 @@ class SendgridService
 
         // Check the response
         if ($this->resolveStatusCode($response->statusCode())) {
-            $this->logger->log('Verification email sent successfully to ' . $emailTo, Logger::INFO);
+            $this->logger->log('Status email sent successfully to ' . $emailTo, Logger::INFO);
         }
     }
 

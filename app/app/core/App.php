@@ -29,9 +29,12 @@ class App
         try {
             // Call the method with the parameters of the controller
             call_user_func_array([$this->controller, $this->method], $this->params);
-        } catch (Throwable $th) {
-            // Call the error handler
+        } catch (DatabaseException | SendGridServiceException $th) {
+            // Catch managed exceptions and show the message
             $this->callErrorHandler($th);
+        } catch (Throwable $th) {
+            // Catch unknown exceptions
+            $this->callErrorHandler(new Exception('An unknown error ocurred! You entered a state that the application couldn\'t handle', $th->getCode(), $th));
         }
     }
 

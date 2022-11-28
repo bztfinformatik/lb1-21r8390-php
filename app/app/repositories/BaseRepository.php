@@ -1,8 +1,5 @@
 <?php
 
-require_once '../app/core/LogManager.php';
-require_once '../app/core/Database.php';
-
 use Monolog\Logger;
 
 /**
@@ -71,6 +68,6 @@ class BaseRepository
     protected function throwError(string $error)
     {
         $this->logger->log($error, Logger::ERROR);
-        throw new Exception($error);
+        throw new DatabaseException($error);
     }
 }

@@ -1,12 +1,10 @@
 <?php
 
+/**
+ * Handles errors and other types of exceptions.
+ */
 class ErrorHandler extends Controller
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     /**
      * Shows the landing page
      * 
@@ -20,6 +18,8 @@ class ErrorHandler extends Controller
             return;
         }
 
+        $this->logger->log('Showing the landing page', Logger::INFO);
+
         // Render the landing page
         $this->render('landingpage');
     }
@@ -31,6 +31,7 @@ class ErrorHandler extends Controller
      */
     public function notFound(string $page = 'you are looking for')
     {
+        $this->logger->log('Could not find page ' . $page, Logger::WARNING);
         $this->render('error/404', ['notFoundPage' => $page]);
     }
 
@@ -41,6 +42,7 @@ class ErrorHandler extends Controller
      */
     public function internalServerError(Throwable $error)
     {
+        $this->logger->log('Internal Server Error: ' . $error->getMessage(), Logger::ERROR);
         header('HTTP/1.1 500 Internal Server Error');
         $this->render('error/500', ['error' => $error->getMessage()]);
     }
