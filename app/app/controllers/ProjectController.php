@@ -610,6 +610,7 @@ class ProjectController extends Controller
                     if ($this->hasChanges($newProject, $project)) {
                         // Reset the status
                         $newProject->status = $this->loadEnum('project/status', 0);
+                        $this->logger->log('The project ' . $newProject->id . ' was edited by ' . SessionManager::getCurrentUserId(), Logger::INFO);
                     } elseif ($project->status->value != $newProject->status->value) {
                         // Set the confirmed by
                         $newProject->confirmedBy = SessionManager::getCurrentUserId();
@@ -670,29 +671,25 @@ class ProjectController extends Controller
      */
     private function hasChanges(Project $newProject, Project $oldProject): bool
     {
-        return $newProject->userId !== $oldProject->userId
-            || $newProject->title !== $oldProject->title
-            || $newProject->description !== $oldProject->description
-            || $newProject->createdAt !== $oldProject->createdAt
-            || $newProject->fromDate !== $oldProject->fromDate
-            || $newProject->toDate !== $oldProject->toDate
-            || $newProject->docsRepo !== $oldProject->docsRepo
-            || $newProject->codeRepo !== $oldProject->codeRepo
-            || $newProject->wantReadme !== $oldProject->wantReadme
-            || $newProject->wantIgnore !== $oldProject->wantIgnore
-            || $newProject->wantCSS !== $oldProject->wantCSS
-            || $newProject->wantJS !== $oldProject->wantJS
-            || $newProject->wantPages !== $oldProject->wantPages
-            || $newProject->color !== $oldProject->color
-            || $newProject->font !== $oldProject->font
-            || $newProject->wantDarkMode !== $oldProject->wantDarkMode
-            || $newProject->wantCopyright !== $oldProject->wantCopyright
-            || $newProject->wantSearch !== $oldProject->wantSearch
-            || $newProject->wantTags !== $oldProject->wantTags
-            || $newProject->logo !== $oldProject->logo
-            || $newProject->wantJournal !== $oldProject->wantJournal
-            || $newProject->wantExamples !== $oldProject->wantExamples
-            || $newProject->structure !== $oldProject->structure;
+        return $newProject->title != $oldProject->title
+            || $newProject->description != $oldProject->description
+            || $newProject->docsRepo != $oldProject->docsRepo
+            || $newProject->codeRepo != $oldProject->codeRepo
+            || $newProject->wantReadme != $oldProject->wantReadme
+            || $newProject->wantIgnore != $oldProject->wantIgnore
+            || $newProject->wantCSS != $oldProject->wantCSS
+            || $newProject->wantJS != $oldProject->wantJS
+            || $newProject->wantPages != $oldProject->wantPages
+            || $newProject->color->value != $oldProject->color->value
+            || $newProject->font->value != $oldProject->font->value
+            || $newProject->wantDarkMode != $oldProject->wantDarkMode
+            || $newProject->wantCopyright != $oldProject->wantCopyright
+            || $newProject->wantSearch != $oldProject->wantSearch
+            || $newProject->wantTags != $oldProject->wantTags
+            || $newProject->logo != $oldProject->logo
+            || $newProject->wantJournal != $oldProject->wantJournal
+            || $newProject->wantExamples != $oldProject->wantExamples
+            || $newProject->structure != $oldProject->structure;
     }
 
     #endregion
