@@ -1,25 +1,25 @@
 {% import "input/inputs.twig.html" as inputs %}
 
 <div class="col-span-4 sm:col-span-2">
-    {{ inputs.select('color', data.color, data.color_options, data.color_err) }}
+    {{ inputs.select('color', data.color, data.color_options, data.color_err, is_not_owner) }}
 </div>
 <div class="col-span-4 sm:col-span-2">
-    {{ inputs.select('font', data.font, data.font_options, data.font_err) }}
+    {{ inputs.select('font', data.font, data.font_options, data.font_err, is_not_owner) }}
 </div>
 
 <div class="col-span-2 sm:col-span-1">
-    {{ inputs.toggle('Darkmode', 'wantDarkMode', data.wantDarkMode, 'Would you like to be able to view your documentation in dark mode?') }}
+    {{ inputs.toggle('Darkmode', 'wantDarkMode', data.wantDarkMode, is_not_owner, 'Would you like to be able to view your documentation in dark mode?') }}
 </div>
 <div class="col-span-2 sm:col-span-1">
-    {{ inputs.toggle('Copyright', 'wantCopyright', data.wantCopyright, 'Does your project need a LICENCE file') }}
+    {{ inputs.toggle('Copyright', 'wantCopyright', data.wantCopyright, is_not_owner, 'Does your project need a LICENCE file') }}
 </div>
 <div class="col-span-2 sm:col-span-1">
-    {{ inputs.toggle('Search', 'wantSearch', data.wantSearch, 'Do you want to be able to search the content of your documentation?') }}
+    {{ inputs.toggle('Search', 'wantSearch', data.wantSearch, is_not_owner, 'Do you want to be able to search the content of your documentation?') }}
 </div>
 <div class="col-span-2 sm:col-span-1">
-    {{ inputs.toggle('Tags', 'wantTags', data.wantTags, 'Do you want to use tags to group the content?') }}
+    {{ inputs.toggle('Tags', 'wantTags', data.wantTags, is_not_owner, 'Do you want to use tags to group the content?') }}
 </div>
 
 <div class="col-span-4 sm:col-span-2">
-    {{ inputs.upload_file('logo', data.logo, data.logo_err, 'image/*', 70000, 'logo') }}
+    {{ inputs.upload_file('logo', data.logo, data.logo_err, is_not_owner, 'image/*', 70000, 'logo') }}
 </div>

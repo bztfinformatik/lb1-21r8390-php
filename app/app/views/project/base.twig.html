@@ -48,10 +48,18 @@
         <input type="hidden" name="csrf_token" value="{{ data.csrf_token }}" type="password">
 
         <div class="col-span-4 text-end mt-4">
-            {% if currentPage != 0 %}
-            <button type="button" class="btn btn-primary btn-outline" onclick="{ var form = document.getElementById('{{ rand_id }}'); form.action = '{{ form_url }}{{ currentPage }}/1'; form.submit(); }">Previous</button>
+            {% if currentPage > 0 %}
+            <button type="button" class="btn btn-primary btn-outline" onclick="{ var form = document.getElementById('{{ rand_id }}'); form.action = '{{ form_url }}{{ currentPage }}/1'; form.submit(); }">
+                Previous
+            </button>
             {% endif %}
-            <button class="btn btn-primary">Next</button>
+            <button class="btn btn-primary">
+                {% if progress >= 100 %}
+                Finish
+                {% else %}
+                Next
+                {% endif %}
+            </button>
         </div>
 
     </form>

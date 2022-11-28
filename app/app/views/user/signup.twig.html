@@ -17,10 +17,10 @@
             <h2 class="card-title">Sign Up</h2>
             <hr class="mt-2" />
 
-            {{ inputs.input_field('name', data.name, data.name_err, 'text', 35) }}
-            {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
-            {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
-            {{ inputs.upload_file('picture', data.picture, data.picture_err, 'image/*') }}
+            {{ inputs.input_field('name', data.name, data.name_err, false, 'text', 35) }}
+            {{ inputs.input_field('email', data.email, data.email_err, false, 'email', 255) }}
+            {{ inputs.input_field('password', data.password, data.password_err, false, 'password', 500) }}
+            {{ inputs.upload_file('picture', data.picture, data.picture_err, false, 'image/*') }}
 
             <div class="form-control mt-5">
                 <button type="submit" class="btn btn-primary">Sign Up</button>

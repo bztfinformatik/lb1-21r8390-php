@@ -18,8 +18,8 @@
             <h2 class="card-title">Sign In</h2>
             <hr class="mt-2" />
 
-            {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
-            {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
+            {{ inputs.input_field('email', data.email, data.email_err, false, 'email', 255) }}
+            {{ inputs.input_field('password', data.password, data.password_err, false, 'password', 500) }}
 
             {% if allow_reset %}
             <label for="{{ reset_modal }}" class="underline underline-offset-4 pt-2">Forgot your password?</label>

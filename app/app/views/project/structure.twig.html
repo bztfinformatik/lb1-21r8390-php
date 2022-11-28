@@ -1,10 +1,10 @@
 {% import "input/inputs.twig.html" as inputs %}
 
 <div class="col-span-2">
-    {{ inputs.toggle('Journal', 'wantJournal', data.wantJournal, 'Would you like to write a weekly journal?') }}
+    {{ inputs.toggle('Journal', 'wantJournal', data.wantJournal, isAdmin, 'Would you like to write a weekly journal?') }}
 </div>
 <div class="col-span-2">
-    {{ inputs.toggle('Examples', 'wantExamples', data.wantExamples, 'Do you want a page that shows all possible MkDocs components?') }}
+    {{ inputs.toggle('Examples', 'wantExamples', data.wantExamples, isAdmin, 'Do you want a page that shows all possible MkDocs components?') }}
 </div>
 
 <div class="col-span-4 bg-primary/25 py-1">
@@ -40,17 +40,17 @@
                     force_text: true,
                     data: structure_data,
                 },
-                'contextmenu': {
-                    'items': function (node) {
+                contextmenu: {
+                    items: function (node) {
                         var tmp = $.jstree.defaults.contextmenu.items();
                         delete tmp.ccp;
                         delete tmp.create.action;
                         tmp.create.label = "New";
                         tmp.create.submenu = {
-                            "create_folder": {
-                                "separator_after": true,
-                                "label": "Folder",
-                                "action": function (data) {
+                            create_folder: {
+                                separator_after: true,
+                                label: "Folder",
+                                action: function (data) {
                                     var inst = $.jstree.reference(data.reference),
                                         obj = inst.get_node(data.reference);
                                     inst.create_node(obj, { type: "folder" }, "last", function (new_node) {
@@ -58,9 +58,9 @@
                                     });
                                 }
                             },
-                            "create_file": {
-                                "label": "File",
-                                "action": function (data) {
+                            create_file: {
+                                label: "File",
+                                action: function (data) {
                                     var inst = $.jstree.reference(data.reference),
                                         obj = inst.get_node(data.reference);
                                     inst.create_node(obj, { type: "file" }, "last", function (new_node) {
@@ -76,46 +76,50 @@
                             delete tmp.rename;
                             delete tmp.remove;
                         }
+                        {% if is_not_owner %}
+                        return [];
+                        {% else %}
                         return tmp;
+                        {% endif %}
                     }
                 },
-                types: {
-                    default: {
-                        icon: 'root-icon',
-                        valid_children: ['folder', 'file'],
-                    },
-                    folder: {
-                        icon: 'folder-icon',
-                        valid_children: ['folder', 'file'],
-                    },
-                    file: {
-                        icon: 'file-icon',
-                        valid_children: [],
-                    }
-                },
-                plugins: ["wholerow", "changed", "types", "contextmenu", "dnd", "sort", "unique"],
+        types: {
+        default: {
+            icon: 'root-icon',
+            valid_children: ['folder', 'file'],
+        },
+        folder: {
+            icon: 'folder-icon',
+            valid_children: ['folder', 'file'],
+        },
+        file: {
+            icon: 'file-icon',
+            valid_children: [],
+        }
+    },
+        plugins: ["wholerow", "changed", "types", "contextmenu", "dnd", "sort", "unique"]
             })
-            .bind("create_node.jstree", function (e, data) {
-                getStructure();
-            })
-            .bind("move_node.jstree", function (e, data) {
-                getStructure();
-            })
-            .bind("delete_node.jstree", function (e, data) {
-                getStructure();
-            })
-            .bind("rename_node.jstree", function (e, data) {
-                getStructure();
-            })
-            .bind("copy_node.jstree", function (e, data) {
-                getStructure();
-            })
-            .bind("loaded.jstree", function (e, data) {
-                console.log("Tree loaded");
-            });
+        .bind("create_node.jstree", function (e, data) {
+            getStructure();
+        })
+        .bind("move_node.jstree", function (e, data) {
+            getStructure();
+        })
+        .bind("delete_node.jstree", function (e, data) {
+            getStructure();
+        })
+        .bind("rename_node.jstree", function (e, data) {
+            getStructure();
+        })
+        .bind("copy_node.jstree", function (e, data) {
+            getStructure();
+        })
+        .bind("loaded.jstree", function (e, data) {
+            console.log("Tree loaded");
+        });
 
-        var text = $("#jstree_container").jstree(true).get_json("#", { flat: true });
-        console.log(JSON.stringify(text));
+    var text = $("#jstree_container").jstree(true).get_json("#", { flat: true });
+    console.log(JSON.stringify(text));
     });
 
     function getStructure() {

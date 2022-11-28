@@ -156,6 +156,7 @@ class ProjectController extends Controller
             'message' => $message,
             'currentPage' => $currentStep,
             'data' => $data,
+            'is_not_owner' => isset($project) && $project->userId != SessionManager::getCurrentUserId(),
         ]);
     }
 
@@ -314,16 +315,16 @@ class ProjectController extends Controller
         $defaultJson = '[ "docs" ]';
 
         $data = [
-            'wantJournal' => '',
-            'wantExamples' => '',
+            'wantJournal' => true,
+            'wantExamples' => false,
             'structure' => $defaultJson,
             'structure_err' => '',
         ];
 
         // Check if the form was submitted or requested
         if ($isPost) {
-            $data['wantJournal'] = filter_has_var(INPUT_POST, 'wantDarkMode');
-            $data['wantExamples'] = filter_has_var(INPUT_POST, 'wantCopyright');
+            $data['wantJournal'] = filter_has_var(INPUT_POST, 'wantJournal');
+            $data['wantExamples'] = filter_has_var(INPUT_POST, 'wantExamples');
             $data['structure'] = $structure = trim($_POST['structure']);
 
             // Validate the data

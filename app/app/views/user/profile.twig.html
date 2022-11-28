@@ -33,11 +33,11 @@
             <h2 class="card-title">Profile</h2>
             <hr class="mt-2" />
 
-            {{ inputs.input_field('name', data.name, data.name_err, 'text', 35) }}
-            {{ inputs.input_field('email', data.email, data.email_err, 'email', 255) }}
-            {{ inputs.toggle('Send Updates', 'wants_updates', data.wants_updates, 'Do you want to be informed by mail about status changes of your projects?') }}
-            {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
-            {{ inputs.upload_file('picture', data.picture, data.picture_err, 'image/*') }}
+            {{ inputs.input_field('name', data.name, data.name_err, false, 'text', 35) }}
+            {{ inputs.input_field('email', data.email, data.email_err, false, 'email', 255) }}
+            {{ inputs.toggle('Send Updates', 'wants_updates', data.wants_updates, false, 'Do you want to be informed by mail about status changes of your projects?') }}
+            {{ inputs.input_field('password', data.password, data.password_err, false, 'password', 500) }}
+            {{ inputs.upload_file('picture', data.picture, data.picture_err, false, 'image/*') }}
 
             <input type="hidden" name="csrf_token" value="{{ data.csrf_token }}">
 

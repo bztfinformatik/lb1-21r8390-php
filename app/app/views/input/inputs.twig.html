@@ -1,10 +1,16 @@
-{% macro input_field(name, value, error, type = 'text', size = -1, caption = '') %}
+{% macro input_field(name, value, error, is_disabled, type = 'text', size = -1, caption = '') %}
 <div class="form-control w-full">
     <label class="label">
         <span class="label-text font-medium">{{ caption|default(name)|capitalize }}</span>
     </label>
 
+    {% if is_disabled %}
+    <input type="hidden" name="{{ name }}" value="{{ value|e }}" />
+    <input disabled type="{{ type }}" value="{{ value|e }}" {% if size> 0 %} maxlength="{{ size }}" {% endif %} class="input input-bordered input-sm w-full {% if error is not empty %} input-error {% endif %}" />
+    {% else %}
     <input type="{{ type }}" name="{{ name }}" value="{{ value|e }}" {% if size> 0 %} maxlength="{{ size }}" {% endif %} class="input input-bordered input-sm w-full {% if error is not empty %} input-error {% endif %}" />
+    {% endif %}
+
 
     {% if error is not empty %}
     <label class="label">
@@ -20,7 +26,12 @@
         <span class="label-text font-medium">{{ name|capitalize }}</span>
     </label>
 
-    <textarea name="{{ name }}" {% if size>0 %} rows="{{ rows }}" maxlength="{{ size }}" {% endif %} class="textarea {% if error is not empty %} textarea-error {% endif %}" {% if readonly==true %}readonly{% endif %}>{{ value|e }}</textarea>
+    {% if readonly %}
+    <input type="hidden" name="{{ name }}" value="{{ value|e }}" />
+    <textarea disabled value="{{ value|e }}" {% if size>0 %} rows="{{ rows }}" maxlength="{{ size }}" {% endif %} class="textarea {% if error is not empty %} textarea-error {% endif %}">{{ value|e }}</textarea>
+    {% else %}
+    <textarea name="{{ name }}" value="{{ value|e }}" {% if size>0 %} rows="{{ rows }}" maxlength="{{ size }}" {% endif %} class="textarea {% if error is not empty %} textarea-error {% endif %}">{{ value|e }}</textarea>
+    {% endif %}
 
     {% if error is not empty %}
     <label class="label">
@@ -30,11 +41,13 @@
 </div>
 {% endmacro %}
 
-{% macro upload_file(name, value, error, accept, size = 700000, caption = '') %}
+{% macro upload_file(name, value, error, is_disabled, accept, size = 700000, caption = '') %}
 {% set rand_id = random(5000, 6000) %}
 <div class="form-control">
     <input id="upload_{{ rand_id }}" type="text" name="{{ name }}" value="{{ value|e }}" class="hidden" readonly />
+    {% if is_disabled == false %}
     <input id="upload_file_{{ rand_id }}" type="file" accept="{{ accept }}" maxlength="{{ size }}" class="hidden" onchange="uploadFile(this.files[0], 'upload_{{ rand_id }}', 'upload_image_{{ rand_id }}', 'error_{{ rand_id }}')" />
+    {% endif %}
 
     <label class="label">
         <span class="label-text font-medium">{{ caption|capitalize }}</span>
@@ -54,16 +67,26 @@
 </div>
 {% endmacro %}
 
-{% macro toggle(text, name, value, tooltip = '') %}
+{% macro toggle(text, name, value, is_disabled, tooltip = '') %}
 <div>
     {% if tooltip is empty %}
     <span class="label-text font-medium">{{ text }}</span>
+    {% if is_disabled %}
+    <input type="hidden" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+    <input disabled type="checkbox" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+    {% else %}
     <input type="checkbox" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+    {% endif %}
     {% else %}
     <div class="tooltip tooltip-bottom" data-tip="{{ tooltip }}">
         <label class="label cursor-pointer">
             <span class="label-text font-medium mr-5">{{ text }}</span>
+            {% if is_disabled %}
+            <input type="hidden" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+            <input disabled type="checkbox" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+            {% else %}
             <input type="checkbox" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+            {% endif %}
         </label>
     </div>
     {% endif %}
@@ -76,11 +99,20 @@
         <span class="label-text font-medium">{{ name|capitalize }}</span>
     </label>
 
-    <select name="{{ name }}" class="select select-bordered select-sm {% if error is not empty %} select-error {% endif %} {% if readonly==true %} pointer-events-none {% endif %}">
+    {% if readonly %}
+    <input type="hidden" name="{{ name }}" value="{{ value|e }}" />
+    <select disabled value="{{ value|e }}" class="select select-bordered select-sm w-full {% if error is not empty %} select-error {% endif %}">
+        {% for option in options %}
+        <option value="{{ option.value|e }}" {% if option.value==value %} selected {% endif %}>{{ option|capitalize|replace({'_': ' '}) }}</option>
+        {% endfor %}
+    </select>
+    {% else %}
+    <select name="{{ name }}" class="select select-bordered select-sm {% if error is not empty %} select-error {% endif %} ">
         {% for key, option in options %}
         <option value="{{ option }}" {% if option==value %} selected {% endif %}>{{ option|capitalize|replace({'_': ' '}) }}</option>
         {% endfor %}
     </select>
+    {% endif %}
 
     {% if error is not empty %}
     <label class="label">

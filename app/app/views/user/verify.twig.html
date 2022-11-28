@@ -16,7 +16,7 @@
             <h2 class="card-title">Password Reset</h2>
             <hr class="mt-2" />
 
-            {{ inputs.input_field('password', data.password, data.password_err, 'password', 500) }}
+            {{ inputs.input_field('password', data.password, data.password_err, false, 'password', 500) }}
 
             <input type="hidden" name="token" value="{{ data.token }}">
 
