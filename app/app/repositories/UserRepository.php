@@ -183,7 +183,7 @@ class UserRepository extends BaseRepository
             $user->role = $this->loadEnum('role', $result['role']);
             $user->profilePicture = $result['profilePicture'];
             $user->isVerified = $result['isVerified'];
-            $user->verificationCode = $result['verificationCode'];
+            $user->verificationCode = $result['verificationCode'] ?? '';
             $user->createdAt = $result['createdAt'];
 
             // Return the found user
