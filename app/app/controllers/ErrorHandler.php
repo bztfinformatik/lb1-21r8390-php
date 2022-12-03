@@ -47,6 +47,9 @@ class ErrorHandler extends Controller
         $this->logger->log('Internal Server Error: ' . $error->getMessage() . ' with previous: ' . $error->getPrevious(), Logger::ERROR);
         header('HTTP/1.1 500 Internal Server Error');
         http_response_code(500);
-        $this->render('error/500', ['error' => $error->getMessage()]);
+        $this->render('error/500', [
+            'error_text' => '500 - Internal Server Error',
+            'error' => $error->getMessage(),
+        ]);
     }
 }
