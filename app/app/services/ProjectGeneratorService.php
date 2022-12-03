@@ -118,7 +118,7 @@ class ProjectGeneratorService
         $this->copyIndex($docsDirectory, $project);
 
         // Copy the favicon
-        $this->copyFavicon($docsDirectory);
+        $this->copyFavicon($docsDirectory, $project);
 
         // Copy the tags
         if ($project->wantTags) {
@@ -398,13 +398,14 @@ class ProjectGeneratorService
      * Copy the favicon to the docs directory
      * 
      * @param string $docsDirectory The path to the docs directory
+     * @param Project $project The project
      */
-    private function copyFavicon(string $docsDirectory)
+    private function copyFavicon(string $docsDirectory, Project $project)
     {
         $this->logger->log("Copying the favicon to the docs directory '$docsDirectory'", Logger::DEBUG);
 
         // Get the path to the favicon
-        $faviconPath = self::getTemplatePath() . 'favicon.ico';
+        $faviconPath = self::getTemplatePath() . 'favicon.svg';
 
         // Check if the file exists
         if (!is_file($faviconPath)) {
@@ -412,9 +413,14 @@ class ProjectGeneratorService
         }
 
         // Copy the file to the docs directory
-        if (!copy($faviconPath, $docsDirectory . DIRECTORY_SEPARATOR . 'favicon.ico')) {
+        if (!copy($faviconPath, $docsDirectory . DIRECTORY_SEPARATOR . 'favicon.svg')) {
             $this->throwError("The favicon could not be copied to '$docsDirectory'");
         }
+
+        // Replace the placeholders
+        $this->replaceTemplateLiterals($docsDirectory . DIRECTORY_SEPARATOR . 'favicon.svg', [
+            'favicon' => $project->logo,
+        ]);
 
         $this->logger->log("The favicon has been copied to the docs directory '$docsDirectory'", Logger::DEBUG);
     }
@@ -520,12 +526,59 @@ class ProjectGeneratorService
         }
 
         // Darkmode
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'darkmode' => $project->wantDarkMode ? '# Dark theme toggle
+                - media: "(prefers-color-scheme: light)"
+                  scheme: {{ color }}
+                  toggle:
+                      icon: material/weather-sunny
+                      name: Switch to dark mode
+                - media: "(prefers-color-scheme: dark)"
+                  scheme: slate
+                  toggle:
+                      icon: material/weather-night
+                      name: Switch to light mode'
+                : 'scheme: {{ color }}',
+        ]);
+
+
         // CSS
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'custom_css' => $project->wantCSS ? '# Custom CSS file
+                extra_css:
+                    - css/custom.css'
+                : '',
+        ]);
+
         // JS
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'custom_js' => $project->wantJS ? '# Custom JS file
+                extra_javascript:
+                    - js/custom.js'
+                : '',
+        ]);
+
         // Tags
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'tags' => $project->wantTags ? '- tags:
+                tags_file: "tags.md"'
+                : '',
+        ]);
+
         // Examples
-        // Favicons
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'examples' => $project->wantExamples ? '- Examples:
+                - Start:  "examples/Start.md"
+                - Admonition: "examples/Admonition.md"
+                - "Code Blocks": "examples/CodeBlock.md"
+                - Tabs:  "examples/Tabs.md"'
+                : '',
+        ]);
+
         // Search
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'search' => $project->wantSearch ? '- search' : '',
+        ]);
 
         // Replace the author
         $this->replaceTemplateLiterals($projectMkdocsPath, [
@@ -711,16 +764,26 @@ class ProjectGeneratorService
     {
         $this->logger->log('Downloading the zip file', Logger::DEBUG);
 
-        // Get the name of the zip file
-        $zipName = basename($zipPath);
+        if (file_exists($zipPath)) {
+            // Get the name of the zip file
+            $zipName = basename($zipPath);
 
-        // Set the headers
-        header('Content-Type: application/zip');
-        header('Content-Disposition: attachment; filename="' . $zipName . '"');
-        header('Content-Length: ' . filesize($zipPath));
+            // Set the headers
+            // https://www.w3docs.com/snippets/php/automatic-download-file.html
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/zip');
+            header('Content-Disposition: attachment; filename="' . basename($zipName) . '"');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($zipPath));
+            flush(); // Flush system output buffer
 
-        // Read the zip file
-        readfile($zipPath);
+            // Read the zip file
+            readfile($zipPath);
+        } else {
+            $this->throwError("The zip file could not be found at '$zipPath'");
+        }
 
         $this->logger->log('The zip file has been downloaded', Logger::INFO);
     }

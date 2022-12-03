@@ -49,7 +49,12 @@ Es wurde das ganze **UI** mit entwürfen für das verwalten von **Sessions** umg
 
 Es fehlt nur noch die **Datenbank**, **Downloads**, **Email** und der Datei Viewer. Die Datenbank wurde bewusst noch nicht gemacht, da `Mocking` verlangt wurde. Da der Download nahe zusammen mit der Datenbank liegt, wurde dieser auch noch nicht gemacht. Die Emails habe gleich wie die Datenbank als _Backendlogik_ klassifiziert und werde sie somit in er nächsten Abgabe umsetzen. Die Problematik mit dem **Datei Viewer** wird in der Dokumentation beschrieben. Die Lösung ist noch nicht gefunden.
 
-### TODO:
+## 3. Abgabe 📦
 
--   Emails
+-   [x] Datenbank
+-   [x] Emails
+-   [x] Datei Viewer
+
+## TODO:
+
 -   Download
