@@ -1,0 +1,27 @@
+# https://squidfunk.github.io/mkdocs-material/publishing-your-site/#with-github-actions
+
+name: ci-mkdocs
+on:
+    push:
+        branches:
+            - main
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-python@v2
+              with:
+                  python-version: 3.x
+
+            - name: Move Config 📝
+              run: mv ./docs/mkdocs.yml .
+
+            - name: Install dependencies 📦
+              run: pip install \
+                  mkdocs-material \
+                  mkdocs-minify-plugin \
+                  mkdocs-redirects
+
+            - name: Deploy documentation 🌟
+              run: mkdocs gh-deploy --force

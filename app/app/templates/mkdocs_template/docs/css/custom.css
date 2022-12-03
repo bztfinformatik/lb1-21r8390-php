@@ -1,0 +1,10 @@
+.text-highlight {
+	color: #d11f93;
+	font-weight: bold;
+	letter-spacing: 0.065em;
+}
+
+.text-highlight:hover {
+	color: #ff00a6;
+	text-shadow: 0 0 0.7em #c06ba2;
+}

@@ -636,6 +636,12 @@ class ProjectController extends Controller
                             $this->logger->log('Owner of project ' . $newProject->id . ' does not exist', Logger::WARNING);
                         }
                     }
+
+                    // Set the download URL
+                    if ((!isset($newProject->downloadUrl) ||  empty($newProject->downloadUrl)) && $newProject->status->value == $this->loadEnum('project/status', 1)->value) {
+                        $newProject->downloadUrl = md5($newProject->id . $newProject->title . $newProject->userId . $newProject->createdAt);
+                        $this->logger->log('The download URL of project ' . $newProject->id . ' has been set to ' . $newProject->downloadUrl, Logger::INFO);
+                    }
                 }
 
                 // // Save the project

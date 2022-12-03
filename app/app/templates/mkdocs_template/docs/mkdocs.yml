@@ -1,0 +1,93 @@
+# The title of the documentation
+site_name: "{{ title }}"
+
+# How the page will look like
+theme:
+    # Set to MkDocs for Material theme
+    name: material
+    palette:
+        {{ darkmode }}
+    # Set the language
+    language: en
+    # Set the favicon
+    logo: favicon.svg
+    favicon: favicon.svg
+    # Set the font (any Google font)
+    font:
+        text: {{ font }}
+    # Icons for the navigation bar
+    icon:
+        repo: fontawesome/brands/github-alt
+    features:
+        - navigation.instant
+        - navigation.tracking
+        - navigation.tabs
+        - navigation.top
+        - navigation.indexes
+        - search.share
+        - content.code.annotate
+        - content.tabs.link
+
+{{ custom_css }}
+{{ custom_js }}
+
+# The copyright notice at the bottom of the page
+copyright: Copyright &copy; {{year}} {{author}}
+
+# The edit on the navigation bar
+repo_url: {{ docs_repo }}
+repo_name: Source Code
+edit_uri: {{ docs_repo }}/tree/main/docs
+
+# Social card for sharing on social media
+extra:
+    social:
+        - icon: fontawesome/brands/github
+          link: {{ code_repo }}
+          name: {{ title }} on GitHub
+
+# Extensions for MkDocs
+markdown_extensions:
+    # Python Markdown
+    - abbr
+    - admonition
+    - attr_list
+    - def_list
+    - footnotes
+    - md_in_html
+    - toc:
+          permalink: "#"
+    - pymdownx.emoji:
+          emoji_generator: !!python/name:materialx.emoji.to_svg
+          emoji_index: !!python/name:materialx.emoji.twemoji
+    - pymdownx.arithmatex:
+          generic: true
+    - pymdownx.betterem:
+          smart_enable: all
+    - pymdownx.caret
+    - pymdownx.details
+    - pymdownx.highlight:
+          anchor_linenums: true
+    - pymdownx.inlinehilite
+    - pymdownx.keys
+    - pymdownx.mark
+    - pymdownx.smartsymbols
+    - pymdownx.superfences
+    - pymdownx.snippets:
+          base_path: docs
+    - pymdownx.tabbed:
+          alternate_style: true
+    - pymdownx.tasklist:
+          custom_checkbox: true
+
+# Plugins configuration
+plugins:
+    {{ search }}
+    {{ tags }}
+
+# Write here the structure of the documentation
+nav:
+    - Home:
+          - Home: "index.md"
+    {{ examples }}
+    {{ journal }}
