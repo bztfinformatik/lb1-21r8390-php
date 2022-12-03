@@ -591,7 +591,7 @@ extra_javascript:
         // Journal
         $journal = '';
         for ($i = 1; $i <= $amountOfWeeks; $i++) {
-            $journal .= '        - "' . $i . '. Week": "journal/Week ' . $i . '.md"' . PHP_EOL;
+            $journal .= '        - "' . $i . '. Week": "journal/' . str_pad($i, 3, '0', STR_PAD_LEFT) . '_Week.md' . '"' . PHP_EOL;
         }
 
         $this->replaceTemplateLiterals($projectMkdocsPath, [
