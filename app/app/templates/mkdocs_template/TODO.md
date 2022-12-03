@@ -1,0 +1,25 @@
+# TODO
+
+-   LICENSE
+    -   Year
+    -   Owner name
+-   .gitignore
+-   README
+    -   Author
+    -   docs URL
+    -   source URL
+-   Custom CSS
+-   Custom JS
+-   Pages
+-   mkdocs
+    -   Color
+    -   Font
+    -   Darkmode
+    -   Copyright
+        -   Year
+        -   Name
+    -   Search
+    -   favicon.svg
+-   Tags
+-   Examples
+-   Struktur
