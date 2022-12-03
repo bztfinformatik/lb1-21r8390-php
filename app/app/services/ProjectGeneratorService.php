@@ -41,7 +41,7 @@ class ProjectGeneratorService
      */
     private static function getTemplatePath(): string
     {
-        return '../app/templates/mkdocs/';
+        return '../app/templates/mkdocs_template/';
     }
 
     /**
@@ -52,7 +52,7 @@ class ProjectGeneratorService
      */
     private function replaceTemplateLiterals(string $path, array $literals)
     {
-        $this->logger->log('Replacing template literals in ' . $path . ' with ' . json_encode($literals), Logger::DEBUG);
+        $this->logger->log('Replacing template literals in ' . $path . ' with ' . count($literals) . ' literals', Logger::DEBUG);
         $license = file_get_contents($path);
 
         // Replace each literal
@@ -63,7 +63,13 @@ class ProjectGeneratorService
         file_put_contents($path, $license);
     }
 
-    public function start(Project|null $project, User|null $owner)
+    /**
+     * Generates the project files
+     * 
+     * @param Project $project The project to generate the files for
+     * @param User $user The user that generated the project
+     */
+    public function generate(Project|null $project, User|null $owner)
     {
         // Validate the project
         if (!isset($project)) {
@@ -92,7 +98,7 @@ class ProjectGeneratorService
         }
 
         // Create the LICENSE file
-        if ($project->wantLicense) {
+        if ($project->wantCopyright) {
             $this->createLicense($projectDirectory, $owner);
         }
 
@@ -104,9 +110,9 @@ class ProjectGeneratorService
         // Create the docs directory
         $docsDirectory = $projectDirectory . '/docs';
         if (mkdir($docsDirectory)) {
-            $this->logger->log("Created the docs directory in '$projectDirectory'", Logger::DEBUG);
+            $this->logger->log("Created the docs directory '$docsDirectory' in '$projectDirectory'", Logger::DEBUG);
         } else {
-            $this->throwError("Could not create the /docs directory in '$projectDirectory'");
+            $this->throwError("Could not create the /docs directory '$docsDirectory' in '$projectDirectory'");
         }
 
         // Copy examples
@@ -135,21 +141,22 @@ class ProjectGeneratorService
             $this->copyJs($docsDirectory);
         }
 
+        // Create the journal
+        $amountOfWeeks = 0;
+        if ($project->wantJournal) {
+            $amountOfWeeks = $this->createWeeklyJournal($docsDirectory, $project);
+        }
+
         // Create the mkdocs.yml file
-        $this->createMkdocsYml($docsDirectory, $project, $owner);
+        $this->createMkdocsYml($docsDirectory, $project, $owner, $amountOfWeeks);
 
         // Create the structure
         $this->createStructure($docsDirectory, $project);
 
-        // Create the journal
-        if ($project->wantJournal) {
-            $this->createWeeklyJournal($docsDirectory, $project);
-        }
-
         $this->logger->log("Finished the project generator for project '$project->id'", Logger::INFO);
 
         // Create a zip file
-        $zipPath = $this->createZip($projectDirectory);
+        $zipPath = $this->createZipFromProject($projectDirectory);
 
         // Download the zip file
         $this->downloadZip($zipPath);
@@ -207,13 +214,13 @@ class ProjectGeneratorService
 
         // Copy the docker-compose.yml file
         $dockerComposePath = $projectDirectory . DIRECTORY_SEPARATOR . 'docker-compose.yml';
-        if (!copy(self::getTemplatePath() . 'docker-compose.yml', $dockerComposePath)) {
+        if (!copyr(self::getTemplatePath() . 'docker-compose.yml', $dockerComposePath)) {
             $this->throwError("Could not copy the docker-compose.yml file to '$dockerComposePath'");
         }
 
         // Copy the Docker directory
         $dockerPath = $projectDirectory . DIRECTORY_SEPARATOR . 'docker';
-        if (!copy(self::getTemplatePath() . 'docker', $dockerPath)) {
+        if (!copyr(self::getTemplatePath() . 'docker', $dockerPath)) {
             $this->throwError("Could not copy the Docker directory to '$dockerPath'");
         }
 
@@ -238,7 +245,7 @@ class ProjectGeneratorService
         }
 
         // Copy the file to the project directory
-        if (!copy($gitIgnorePath, $projectDirectory . DIRECTORY_SEPARATOR . '.gitignore')) {
+        if (!copyr($gitIgnorePath, $projectDirectory . DIRECTORY_SEPARATOR . '.gitignore')) {
             $this->throwError("The .gitignore file could not be copied to '$projectDirectory'");
         }
 
@@ -263,7 +270,7 @@ class ProjectGeneratorService
         }
 
         // Copy the directory to the project directory
-        if (!copy($githubActionsPath, $projectDirectory . DIRECTORY_SEPARATOR . '.github')) {
+        if (!copyr($githubActionsPath, $projectDirectory . DIRECTORY_SEPARATOR . '.github')) {
             $this->throwError("The github actions directory could not be copied to '$projectDirectory'");
         }
 
@@ -289,7 +296,7 @@ class ProjectGeneratorService
 
         // Copy the file to the project directory
         $projectLicensePath = $projectDirectory . DIRECTORY_SEPARATOR . 'LICENSE';
-        if (!copy($licensePath, $projectLicensePath)) {
+        if (!copyr($licensePath, $projectLicensePath)) {
             $this->throwError("The LICENSE file could not be copied to '$projectDirectory'");
         }
 
@@ -321,7 +328,7 @@ class ProjectGeneratorService
 
         // Copy the file to the project directory
         $projectReadmePath = $projectDirectory . DIRECTORY_SEPARATOR . 'README.md';
-        if (!copy($readmePath, $projectReadmePath)) {
+        if (!copyr($readmePath, $projectReadmePath)) {
             $this->throwError("The README.md file could not be copied to '$projectDirectory'");
         }
 
@@ -346,7 +353,7 @@ class ProjectGeneratorService
         $this->logger->log("Copying the examples to the docs directory '$docsDirectory'", Logger::DEBUG);
 
         // Get the path to the examples directory
-        $examplesPath = self::getTemplatePath() . 'examples';
+        $examplesPath = self::getTemplatePath() . 'docs/examples';
 
         // Check if the directory exists
         if (!is_dir($examplesPath)) {
@@ -354,7 +361,7 @@ class ProjectGeneratorService
         }
 
         // Copy the directory to the docs directory
-        if (!copy($examplesPath, $docsDirectory . DIRECTORY_SEPARATOR . 'examples')) {
+        if (!copyr($examplesPath, $docsDirectory . DIRECTORY_SEPARATOR . 'examples')) {
             $this->throwError("The examples directory could not be copied to '$docsDirectory'");
         }
 
@@ -372,7 +379,7 @@ class ProjectGeneratorService
         $this->logger->log("Copying the index.md file to the docs directory '$docsDirectory'", Logger::DEBUG);
 
         // Get the path to the index.md file
-        $indexPath = self::getTemplatePath() . 'index.md';
+        $indexPath = self::getTemplatePath() . 'docs/index.md';
 
         // Check if the file exists
         if (!is_file($indexPath)) {
@@ -380,7 +387,7 @@ class ProjectGeneratorService
         }
 
         // Copy the file to the docs directory
-        if (!copy($indexPath, $docsDirectory . DIRECTORY_SEPARATOR . 'index.md')) {
+        if (!copyr($indexPath, $docsDirectory . DIRECTORY_SEPARATOR . 'index.md')) {
             $this->throwError("The index.md file could not be copied to '$docsDirectory'");
         }
 
@@ -405,7 +412,7 @@ class ProjectGeneratorService
         $this->logger->log("Copying the favicon to the docs directory '$docsDirectory'", Logger::DEBUG);
 
         // Get the path to the favicon
-        $faviconPath = self::getTemplatePath() . 'favicon.svg';
+        $faviconPath = self::getTemplatePath() . 'docs/favicon.svg';
 
         // Check if the file exists
         if (!is_file($faviconPath)) {
@@ -413,7 +420,7 @@ class ProjectGeneratorService
         }
 
         // Copy the file to the docs directory
-        if (!copy($faviconPath, $docsDirectory . DIRECTORY_SEPARATOR . 'favicon.svg')) {
+        if (!copyr($faviconPath, $docsDirectory . DIRECTORY_SEPARATOR . 'favicon.svg')) {
             $this->throwError("The favicon could not be copied to '$docsDirectory'");
         }
 
@@ -435,7 +442,7 @@ class ProjectGeneratorService
         $this->logger->log("Copying the tags to the docs directory '$docsDirectory'", Logger::DEBUG);
 
         // Get the path to the tags directory
-        $tagsPath = self::getTemplatePath() . 'tags.md';
+        $tagsPath = self::getTemplatePath() . 'docs/tags.md';
 
         // Check if the file exists
         if (!is_file($tagsPath)) {
@@ -443,7 +450,7 @@ class ProjectGeneratorService
         }
 
         // Copy the file to the docs directory
-        if (!copy($tagsPath, $docsDirectory . DIRECTORY_SEPARATOR . 'tags.md')) {
+        if (!copyr($tagsPath, $docsDirectory . DIRECTORY_SEPARATOR . 'tags.md')) {
             $this->throwError("The tags file could not be copied to '$docsDirectory'");
         }
 
@@ -460,7 +467,7 @@ class ProjectGeneratorService
         $this->logger->log("Copying the css to the docs directory '$docsDirectory'", Logger::DEBUG);
 
         // Get the path to the css directory
-        $cssPath = self::getTemplatePath() . 'css';
+        $cssPath = self::getTemplatePath() . 'docs/css';
 
         // Check if the directory exists
         if (!is_dir($cssPath)) {
@@ -468,7 +475,7 @@ class ProjectGeneratorService
         }
 
         // Copy the directory to the docs directory
-        if (!copy($cssPath, $docsDirectory . DIRECTORY_SEPARATOR . 'css')) {
+        if (!copyr($cssPath, $docsDirectory . DIRECTORY_SEPARATOR . 'css')) {
             $this->throwError("The css directory could not be copied to '$docsDirectory'");
         }
 
@@ -485,7 +492,7 @@ class ProjectGeneratorService
         $this->logger->log("Copying the js to the docs directory '$docsDirectory'", Logger::DEBUG);
 
         // Get the path to the js directory
-        $jsPath = self::getTemplatePath() . 'js';
+        $jsPath = self::getTemplatePath() . 'docs/js';
 
         // Check if the directory exists
         if (!is_dir($jsPath)) {
@@ -493,7 +500,7 @@ class ProjectGeneratorService
         }
 
         // Copy the directory to the docs directory
-        if (!copy($jsPath, $docsDirectory . DIRECTORY_SEPARATOR . 'js')) {
+        if (!copyr($jsPath, $docsDirectory . DIRECTORY_SEPARATOR . 'js')) {
             $this->throwError("The js directory could not be copied to '$docsDirectory'");
         }
 
@@ -506,13 +513,14 @@ class ProjectGeneratorService
      * @param string $docsDirectory The path to the docs directory
      * @param Project $project The project
      * @param User $owner The owner of the project
+     * @param int $amountOfWeeks The amount of weeks to show in the journal
      */
-    private function createMkdocsYml(string $docsDirectory, Project $project, User $owner)
+    private function createMkdocsYml(string $docsDirectory, Project $project, User $owner, int $amountOfWeeks)
     {
         $this->logger->log("Creating the mkdocs.yml file in the docs directory '$docsDirectory'", Logger::DEBUG);
 
         // Get the path to the mkdocs.yml file
-        $mkdocsPath = self::getTemplatePath() . 'mkdocs.yml';
+        $mkdocsPath = self::getTemplatePath() . 'docs/mkdocs.yml';
 
         // Check if the file exists
         if (!is_file($mkdocsPath)) {
@@ -521,23 +529,23 @@ class ProjectGeneratorService
 
         // Copy the file to the docs directory
         $projectMkdocsPath = $docsDirectory . DIRECTORY_SEPARATOR . 'mkdocs.yml';
-        if (!copy($mkdocsPath, $projectMkdocsPath)) {
+        if (!copyr($mkdocsPath, $projectMkdocsPath)) {
             $this->throwError("The mkdocs.yml file could not be copied to '$docsDirectory'");
         }
 
         // Darkmode
         $this->replaceTemplateLiterals($projectMkdocsPath, [
             'darkmode' => $project->wantDarkMode ? '# Dark theme toggle
-                - media: "(prefers-color-scheme: light)"
-                  scheme: {{ color }}
-                  toggle:
-                      icon: material/weather-sunny
-                      name: Switch to dark mode
-                - media: "(prefers-color-scheme: dark)"
-                  scheme: slate
-                  toggle:
-                      icon: material/weather-night
-                      name: Switch to light mode'
+        - media: "(prefers-color-scheme: light)"
+          scheme: {{ color }}
+          toggle:
+              icon: material/weather-sunny
+              name: Switch to dark mode
+        - media: "(prefers-color-scheme: dark)"
+          scheme: slate
+          toggle:
+              icon: material/weather-night
+              name: Switch to light mode'
                 : 'scheme: {{ color }}',
         ]);
 
@@ -545,33 +553,16 @@ class ProjectGeneratorService
         // CSS
         $this->replaceTemplateLiterals($projectMkdocsPath, [
             'custom_css' => $project->wantCSS ? '# Custom CSS file
-                extra_css:
-                    - css/custom.css'
+extra_css:
+    - css/custom.css'
                 : '',
         ]);
 
         // JS
         $this->replaceTemplateLiterals($projectMkdocsPath, [
             'custom_js' => $project->wantJS ? '# Custom JS file
-                extra_javascript:
-                    - js/custom.js'
-                : '',
-        ]);
-
-        // Tags
-        $this->replaceTemplateLiterals($projectMkdocsPath, [
-            'tags' => $project->wantTags ? '- tags:
-                tags_file: "tags.md"'
-                : '',
-        ]);
-
-        // Examples
-        $this->replaceTemplateLiterals($projectMkdocsPath, [
-            'examples' => $project->wantExamples ? '- Examples:
-                - Start:  "examples/Start.md"
-                - Admonition: "examples/Admonition.md"
-                - "Code Blocks": "examples/CodeBlock.md"
-                - Tabs:  "examples/Tabs.md"'
+extra_javascript:
+    - js/custom.js'
                 : '',
         ]);
 
@@ -580,12 +571,38 @@ class ProjectGeneratorService
             'search' => $project->wantSearch ? '- search' : '',
         ]);
 
+        // Tags
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'tags' => $project->wantTags ? '- tags:
+        tags_file: "tags.md"'
+                : '',
+        ]);
+
+        // Examples
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'examples' => $project->wantExamples ? '- Examples:
+        - Start:  "examples/Start.md"
+        - Admonition: "examples/Admonition.md"
+        - "Code Blocks": "examples/CodeBlock.md"
+        - Tabs:  "examples/Tabs.md"'
+                : '',
+        ]);
+
+        // Journal
+        $journal = '';
+        for ($i = 1; $i <= $amountOfWeeks; $i++) {
+            $journal .= '        - "' . $i . '. Week": "journal/Week ' . $i . '.md"' . PHP_EOL;
+        }
+
+        $this->replaceTemplateLiterals($projectMkdocsPath, [
+            'journal' => $project->wantExamples ? '- Journal:' . PHP_EOL . $journal : '',
+        ]);
+
         // Replace the author
         $this->replaceTemplateLiterals($projectMkdocsPath, [
             'title' => $project->title,
             'color' => strtolower(str_replace('_', ' ', $project->color->name)),
-            'favicon' => $project->favicon,
-            'font' => ucwords(str_replace('_', ' ', $project->font->name)),
+            'font' => ucwords(strtolower(str_replace('_', ' ', $project->font->name))),
             'year' => date('Y'),
             'author' => $owner->name,
             'docs_repo' => $project->docsRepo,
@@ -611,13 +628,21 @@ class ProjectGeneratorService
 
         $this->logger->log('Creating the structure of the docs directory JSON', Logger::DEBUG);
 
-        // Decode the JSON-encoded structure
-        $structure = json_decode($project->structure);
 
         try {
-            // Create the structure
-            $this->createStructureRecursive($docsDirectory, $structure);
-            $this->logger->log('The structure of the docs directory JSON has been created', Logger::DEBUG);
+            if (!isset($project->structure) || empty($project->structure) || $project->structure == '[]' || $project->structure == '[ "docs" ]') {
+                // Default structure - Create a new directory
+                if (!mkdir($docsDirectory . DIRECTORY_SEPARATOR . 'docs')) {
+                    $this->throwError("The docs directory could not be created in '$docsDirectory'");
+                }
+            } else {
+                // Decode the JSON-encoded structure
+                $structure = json_decode($project->structure);
+
+                // Create the structure
+                $this->createStructureRecursive($docsDirectory, $structure);
+                $this->logger->log('The structure of the docs directory JSON has been created', Logger::DEBUG);
+            }
         } catch (Exception $e) {
             $this->logger->log('The structure of the docs directory could not be created because of ' . $e->getMessage(), Logger::ERROR);
         }
@@ -664,10 +689,17 @@ class ProjectGeneratorService
      *
      * @param string $docsDirectory The path to the docs directory
      * @param Project $project The project
+     * @return int The number of weeks
      */
-    private function createWeeklyJournal(string $docsDirectory, Project $project)
+    private function createWeeklyJournal(string $docsDirectory, Project $project): int
     {
         $this->logger->log('Creating the weekly journal', Logger::DEBUG);
+
+        // Create the journal directory if it does not exist
+        $journalDirectory = $docsDirectory . DIRECTORY_SEPARATOR . 'Journal';
+        if (!file_exists($journalDirectory) && !mkdir($journalDirectory)) {
+            $this->throwError("The journal directory could not be created in '$docsDirectory'");
+        }
 
         // While the current date is before the end date
         $currentDate = $project->fromDate;
@@ -676,10 +708,10 @@ class ProjectGeneratorService
         $week = 1;
         while ($currentDate <= $project->toDate) {
             // Create the filename with the date 
-            $fileName = str_pad($week, 4, '0', STR_PAD_LEFT) . '_Week.md';
+            $fileName = str_pad($week, 3, '0', STR_PAD_LEFT) . '_Week.md';
 
             // Get the path to the file
-            $filePath = $docsDirectory . DIRECTORY_SEPARATOR . $fileName;
+            $filePath = $journalDirectory . DIRECTORY_SEPARATOR . $fileName;
 
             // Create the file
             if (!touch($filePath)) {
@@ -691,67 +723,27 @@ class ProjectGeneratorService
         }
 
         $this->logger->log('The weekly journal has been created', Logger::DEBUG);
+        return $week - 1;
     }
 
     /**
-     * Create a zip file of the docs directory
+     * Create a zip file of the project directory
      * 
      * @param string $projectDirectory The path to the project directory
      */
-    private function createZip(string $projectDirectory): string
+    private function createZipFromProject(string $projectDirectory): string
     {
         $this->logger->log('Creating the zip file', Logger::DEBUG);
 
         // Get the path to the zip file
-        $zipPath = $projectDirectory . DIRECTORY_SEPARATOR . 'project.zip';
+        $zipPath = $projectDirectory . DIRECTORY_SEPARATOR . 'MkDocs-Template.zip';
 
         // Create the zip file
-        $zip = new ZipArchive();
-        if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
-            $this->throwError("The zip file could not be created at '$zipPath'");
-        }
-
-        // Add the directory to the zip file
-        $this->addDirectoryToZip($zip, $projectDirectory);
-
-        // Close the zip file
-        $zip->close();
-
-        $this->logger->log("The zip file has been created at '$zipPath'", Logger::DEBUG);
-
-        return $zipPath;
-    }
-
-    /**
-     * Add a directory to a zip file
-     * 
-     * @param ZipArchive $zip The zip file
-     * @param string $directory The path to the directory
-     * @param string $parentDirectory The path to the parent directory
-     */
-    private function addDirectoryToZip(ZipArchive $zip, string $directory, string $parentDirectory = '')
-    {
-        // Get the files and directories in the directory
-        $files = scandir($directory);
-
-        // Add the files and directories to the zip file
-        foreach ($files as $file) {
-            // Skip the current and parent directory
-            if ($file == '.' || $file == '..') {
-                continue;
-            }
-
-            // Get the path to the file
-            $filePath = $directory . DIRECTORY_SEPARATOR . $file;
-
-            // Check if the file is a directory
-            if (is_dir($filePath)) {
-                // Add the directory to the zip file
-                $this->addDirectoryToZip($zip, $filePath, $parentDirectory . $file . DIRECTORY_SEPARATOR);
-            } else {
-                // Add the file to the zip file
-                $zip->addFile($filePath, $parentDirectory . $file);
-            }
+        if (zipDir($projectDirectory, $zipPath)) {
+            $this->logger->log('The zip file has been created', Logger::DEBUG);
+            return $zipPath;
+        } else {
+            $this->throwError('The zip file could not be created');
         }
     }
 

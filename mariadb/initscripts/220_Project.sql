@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `project` (
   `confirmedBy` int(10) unsigned DEFAULT NULL,
   `comment` varchar(500) NOT NULL,
   `status` tinyint(4) NOT NULL,
-  `downloadUrl` varchar(100) NOT NULL,
+  `downloadUrl` varchar(32) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `userId` (`userId`),
   KEY `confirmedBy` (`confirmedBy`),

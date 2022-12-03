@@ -82,7 +82,7 @@
         <label class="label cursor-pointer">
             <span class="label-text font-medium mr-5">{{ text }}</span>
             {% if is_disabled %}
-            <input type="hidden" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
+            <input type="checkbox" {% if value %}checked{% endif %} value="{{ value }}" class="hidden">
             <input disabled type="checkbox" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">
             {% else %}
             <input type="checkbox" name="{{ name }}" {% if value %}checked{% endif %} value="{{ value }}" class="toggle">

@@ -29,7 +29,7 @@ class App
         try {
             // Call the method with the parameters of the controller
             call_user_func_array([$this->controller, $this->method], $this->params);
-        } catch (DatabaseException | SendGridServiceException $th) {
+        } catch (DatabaseException | ProjectGeneratorException | SendGridServiceException $th) {
             // Catch managed exceptions and show the message
             $this->callErrorHandler($th);
         } catch (Throwable $th) {
@@ -94,6 +94,8 @@ class App
         switch (strtolower($controllerName)) {
             case 'login':
                 return 'UserController';
+            case 'download':
+                return 'DownloadController';
             default:
                 return $controllerName;
         }

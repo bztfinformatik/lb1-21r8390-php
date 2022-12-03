@@ -193,6 +193,26 @@ class ProjectRepository extends BaseRepository
         return is_bool($result) ? $result : isset($result);
     }
 
+    public function getProjectByDownloadCode(string $downloadUrl): Project|null
+    {
+        $this->logger->log("Getting project with download code '$downloadUrl' from the database", Logger::DEBUG);
+
+        // Get the project
+        $this->db->query('SELECT * FROM project WHERE downloadUrl = :downloadUrl LIMIT 1');
+        $this->db->bind(':downloadUrl', $downloadUrl);
+
+        // Get the result
+        $result = $this->db->single();
+
+        // Check if the project was found
+        if (!isset($result) || $result === false) {
+            return null;
+        }
+
+        // Return the project if found
+        return $this->loadProject($result);
+    }
+
     #region Helper methods
 
     /**
@@ -250,7 +270,7 @@ class ProjectRepository extends BaseRepository
      *
      * @return Project The generated project
      */
-    private function generateFakeProject(): Project
+    private function generateFakeProject(): Project|Model
     {
         $project = $this->loadModel('project/project');
 

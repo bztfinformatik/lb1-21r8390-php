@@ -49,12 +49,28 @@ Es wurde das ganze **UI** mit entwürfen für das verwalten von **Sessions** umg
 
 Es fehlt nur noch die **Datenbank**, **Downloads**, **Email** und der Datei Viewer. Die Datenbank wurde bewusst noch nicht gemacht, da `Mocking` verlangt wurde. Da der Download nahe zusammen mit der Datenbank liegt, wurde dieser auch noch nicht gemacht. Die Emails habe gleich wie die Datenbank als _Backendlogik_ klassifiziert und werde sie somit in er nächsten Abgabe umsetzen. Die Problematik mit dem **Datei Viewer** wird in der Dokumentation beschrieben. Die Lösung ist noch nicht gefunden.
 
+-   [x] UI
+-   [x] Sessions
+-   [x] ELK-Stack
+-   [x] Mocks
+
 ## 3. Abgabe 📦
 
+Alle funktionalen [Anforderungen](https://bztfinformatik.github.io/lernportfolio-21r8390-php/LB1/Anforderung/Funktionale/), welche das letzte Mal nicht umgesetzt wurden, sind in dieser Abgabe realisiert. Die [Datenbank](mariadb/README.md) wurde mit **MariaDB** umgesetzt und die **Downloads** funktionieren. Über eine Email wird der Benutzer über eine **Statusänderung** informiert. Dazu wurde [SendGrid](https://sendgrid.com/) verwendet. Der Datei Viewer wurde mit jsTree umgesetzt. Die Dokumentation wurde um die **Datenbank** und die **Downloads** erweitert.
+
+Trotzdem ist das Projekt noch nicht `100%` fertig. Es fehlt noch, dass das UI automatisiert **End to End** getestet wird. Dies wurde bewusst mit noch nicht gemacht, da die **Testfälle** noch nicht definiert sind. Diese werden in der nächsten Abgabe umgesetzt.
+
 -   [x] Datenbank
+    -   [x] Testdaten
 -   [x] Emails
 -   [x] Datei Viewer
+-   [x] Download
 
 ## TODO:
 
--   Download
+-   Tests
+
+## Nice to have:
+
+-   Zip in Mail
+-   Redis für Sessions
