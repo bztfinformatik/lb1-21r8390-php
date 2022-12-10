@@ -10,7 +10,7 @@ class SessionManager
      */
     public static function isLoggedIn(): bool
     {
-        return !empty($_SESSION['user_id']);
+        return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
     }
 
     public static function getCurrentUserId(): int
@@ -38,7 +38,13 @@ class SessionManager
      */
     public static function logout()
     {
-        session_destroy();
+        // Check if the user is logged in
+        if (self::isLoggedIn()) {
+            // Destroy the session
+            session_destroy();
+        }
+        // Redirect to the landing page
+        redirect('');
     }
 
     /**
