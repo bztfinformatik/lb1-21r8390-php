@@ -162,6 +162,7 @@ class ProjectGeneratorService
         $this->downloadZip($zipPath);
 
         // Delete the project directory
+        sleep(10);
         $this->deleteProjectDirectory($projectDirectory);
     }
 
@@ -676,10 +677,8 @@ extra_javascript:
                 if (isset($children)) {
                     $this->createStructureRecursive($docsDirectory, $children);
                 }
-            } else {
-                if (!touch($filePath)) {
-                    $this->throwError("The file '$filePath' could not be created");
-                }
+            } elseif ($item->text != 'docs' && !touch($filePath)) {
+                $this->throwError("The file '$filePath' could not be created");
             }
         }
     }
@@ -764,20 +763,20 @@ extra_javascript:
             // https://www.w3docs.com/snippets/php/automatic-download-file.html
             header('Content-Description: File Transfer');
             header('Content-Type: application/zip');
-            header('Content-Disposition: attachment; filename="' . basename($zipName) . '"');
+            header('Content-Disposition: attachment; filename="' . $zipName . '"');
             header('Expires: 0');
-            header('Cache-Control: must-revalidate');
             header('Pragma: public');
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
             header('Content-Length: ' . filesize($zipPath));
             flush(); // Flush system output buffer
 
             // Read the zip file
             readfile($zipPath);
+
+            $this->logger->log('The zip file has been downloaded', Logger::INFO);
         } else {
             $this->throwError("The zip file could not be found at '$zipPath'");
         }
-
-        $this->logger->log('The zip file has been downloaded', Logger::INFO);
     }
 
     /**

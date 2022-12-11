@@ -53,45 +53,18 @@ function copyr(string $source, string $dest): bool
  */
 function zipDir(string $sourcePath, string $outZipPath): bool
 {
-    // Initialize archive object
-    $z = new ZipArchive();
-    if ($z->open($outZipPath, ZipArchive::CREATE) !== true) {
-        return false;
+    $zipFile = new \PhpZip\ZipFile();
+    try {
+        $zipFile
+            ->addDirRecursive($sourcePath) // add files from the directory
+            ->saveAsFile($outZipPath) // save the archive to a file
+            ->close(); // close archive
+
+        return true;
+    } catch (\PhpZip\Exception\ZipException $e) {
+        // handle exception
+        throw $e;
+    } finally {
+        $zipFile->close();
     }
-
-    // Add all files to the archive and trim the path
-    dirToZip($sourcePath, $z, strlen("$sourcePath/"));
-
-    // Close archive
-    return $z->close();
-}
-
-/**
- * Add files and sub-directories in a folder to zip file.
- * 
- * @param string $folder Folder path that should be zipped.
- * @param ZipArchive $zipFile Zip file where files end up.
- * @param int $exclusiveLength Number of text to be excluded from the file path
- */
-function dirToZip(string $folder, ZipArchive &$zipFile, int $exclusiveLength)
-{
-    // Open the folder
-    $handle = opendir($folder);
-    // Loop through the folder
-    while (FALSE !== $f = readdir($handle)) {
-        // Check for local/parent path or zipping file itself and skip
-        if ($f != '.' && $f != '..' && $f != basename(__FILE__)) {
-            $filePath = "$folder/$f";
-            // Remove prefix from file path before add to zip
-            $localPath = substr($filePath, $exclusiveLength);
-            if (is_file($filePath)) {
-                $zipFile->addFile($filePath, $localPath);
-            } elseif (is_dir($filePath)) {
-                // Add sub-directory
-                $zipFile->addEmptyDir($localPath);
-                dirToZip($filePath, $zipFile, $exclusiveLength);
-            }
-        }
-    }
-    closedir($handle);
 }

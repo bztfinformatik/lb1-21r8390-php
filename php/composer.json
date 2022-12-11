@@ -12,6 +12,7 @@
 	"require": {
 		"twig/twig": "^3.0",
 		"monolog/monolog": "^3.2",
-		"sendgrid/sendgrid": "~8"
+		"sendgrid/sendgrid": "~8",
+		"nelexa/zip": "^4.0"
 	}
 }
