@@ -678,7 +678,7 @@ class UserController extends Controller
      */
     private static function generateSalt(): string
     {
-        return bin2hex(random_bytes(32));
+        return bin2hex(random_bytes(5));
     }
 
     /**

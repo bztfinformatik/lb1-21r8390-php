@@ -117,7 +117,7 @@ services:
             retries: 120
 
     mariadb:
-        image: mariadb
+        image: mariadb:latest
         restart: unless-stopped
         networks:
             - database

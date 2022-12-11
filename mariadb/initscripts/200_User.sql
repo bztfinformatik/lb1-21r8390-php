@@ -13,11 +13,11 @@ CREATE TABLE IF NOT EXISTS `user` (
   `email` varchar(255) NOT NULL,
   `wantsUpdates` tinyint(1) unsigned NOT NULL DEFAULT 1,
   `password` varchar(255) NOT NULL,
-  `salt` varchar(70) NOT NULL,
+  `salt` varchar(20) NOT NULL,
   `role` tinyint(4) unsigned NOT NULL,
   `profilePicture` longtext DEFAULT NULL,
   `isVerified` tinyint(1) NOT NULL,
   `verificationCode` varchar(255) DEFAULT NULL,
   `createdAt` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

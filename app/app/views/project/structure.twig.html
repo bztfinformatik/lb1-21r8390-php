@@ -1,10 +1,10 @@
 {% import "input/inputs.twig.html" as inputs %}
 
 <div class="col-span-2">
-    {{ inputs.toggle('Journal', 'wantJournal', data.wantJournal, isAdmin, 'Would you like to write a weekly journal?') }}
+    {{ inputs.toggle('Journal', 'wantJournal', data.wantJournal, is_not_owner, 'Would you like to write a weekly journal?') }}
 </div>
 <div class="col-span-2">
-    {{ inputs.toggle('Examples', 'wantExamples', data.wantExamples, isAdmin, 'Do you want a page that shows all possible MkDocs components?') }}
+    {{ inputs.toggle('Examples', 'wantExamples', data.wantExamples, is_not_owner, 'Do you want a page that shows all possible MkDocs components?') }}
 </div>
 
 <div class="col-span-4 bg-primary/25 py-1">
