@@ -61,7 +61,7 @@ class ProjectController extends Controller
         $formUrl = URLROOT . "/" . $this::class . '/create/';
 
         // Show the view
-        $this->projectView($formUrl, $currentStep, null, 3, $prev);
+        $this->projectView($formUrl, $currentStep, null, 3, $prev, true);
     }
 
     /**
@@ -93,7 +93,8 @@ class ProjectController extends Controller
         $formUrl = URLROOT . "/" . $this::class . '/edit/' . $projectId . '/';
 
         // Show the view
-        $this->projectView($formUrl, $currentStep, $project, 4, $prev);
+        $isOwner = $project->userId == SessionManager::getCurrentUserId();
+        $this->projectView($formUrl, $currentStep, $project, 4, $prev, $isOwner);
     }
 
     /**
@@ -105,7 +106,7 @@ class ProjectController extends Controller
      * @param integer $maxPage The maximum page of the process
      * @param bool $prev Indicates if the user wants to go back to the previous step
      */
-    public function projectView(string $formUrl, int $currentStep, Project|null $project, int $maxPage, bool $prev)
+    public function projectView(string $formUrl, int $currentStep, Project|null $project, int $maxPage, bool $prev, bool $isOwner)
     {
         $this->logger->log('Showing the project view on page ' . $currentStep, Logger::DEBUG);
 
@@ -126,21 +127,51 @@ class ProjectController extends Controller
             $message['title'] = 'The CSRF token is invalid';
             $message['text'] = 'Your request seems to be faulty. Please refresh the page and try again!';
         } else {
-            // Only admins can confirm projects
             // Confirmed or rejected projects can view the confirmation page
             $isAdmin = SessionManager::hasRole($this->loadEnum('role', 'admin')->value);
 
-            // Load all sites
-            $generalData = $this->generalPage($project, $isPost);
-            $appearenceData = $this->appearencePage($project, $isPost);
-            $structureData = $this->structurePage($project, $isPost);
+            // Load all sites and only allow owners to edit them
+            $generalData = $this->generalPage($project, $isPost && $isOwner);
+            $appearenceData = $this->appearencePage($project, $isPost && $isOwner);
+            $structureData = $this->structurePage($project, $isPost && $isOwner);
+            // Only admins can confirm projects
             $evaluationData = $this->evaluationPage($project, $isPost && $isAdmin);
 
-            // Merge all data
+            // Merge all data to one array
             $data = array_merge($data, $generalData, $appearenceData, $structureData, $evaluationData);
 
             if ($isPost) {
-                $this->nextPage($project, $currentStep, $maxPage, $prev, $data, $generalData, $appearenceData, $structureData, $evaluationData);
+                // Check if there are any errors
+                $hasErrors = false;
+                switch ($currentStep) {
+                    case 0:
+                        $hasErrors = $this->hasError($generalData);
+                        break;
+                    case 1:
+                        $hasErrors = $this->hasError($appearenceData);
+                        break;
+                    case 2:
+                        $hasErrors = $this->hasError($structureData);
+                        break;
+                    case 3:
+                        $hasErrors = $this->hasError($evaluationData);
+                        break;
+                    default:
+                        $this->logger->log('Invalid step ' . $currentStep . ' of user ' . SessionManager::getCurrentUserId(), Logger::WARNING);
+                        $hasErrors = true;
+                        break;
+                }
+
+                // Do not go to next page if there are errors
+                if (!$hasErrors) {
+                    $currentStep++;
+
+                    // Has reached last page
+                    if ($currentStep >= $maxPage && !$prev) {
+                        // Merge all data
+                        $this->saveProject($project, $data);
+                    }
+                }
             }
         }
 
@@ -156,7 +187,7 @@ class ProjectController extends Controller
             'message' => $message,
             'currentPage' => $currentStep,
             'data' => $data,
-            'is_not_owner' => isset($project) && $project->userId != SessionManager::getCurrentUserId(),
+            'is_not_owner' => isset($project) && !$isOwner,
         ]);
     }
 
@@ -559,96 +590,63 @@ class ProjectController extends Controller
     }
 
     /**
-     * Loads the next page if there are no errors
+     * Saves the project to the database and sends an email to the user
+     * 
+     * If it has been edited, the status will be reset to 'IN_PROGRESS'
      *
      * @param Project $project The project to save
-     * @param integer $currentStep The current step
-     * @param integer $maxPage The maximum page
      * @param array $data The data to save
-     * @param array $generalData The general data to check
-     * @param array $appearenceData The appearence data to check
-     * @param array $structureData The structure data to check
-     * @param array $evaluationData The evaluation data to check
      */
-    private function nextPage(Project|null $project, int &$currentStep, int $maxPage, bool $wantPrevious, array $data, array $generalData, array $appearenceData, array $structureData, array $evaluationData)
+    private function saveProject(Project|null $project, array $data)
     {
-        // Check if there are any errors
-        $hasErrors = false;
-        switch ($currentStep) {
-            case 0:
-                $hasErrors = $this->hasError($generalData);
-                break;
-            case 1:
-                $hasErrors = $this->hasError($appearenceData);
-                break;
-            case 2:
-                $hasErrors = $this->hasError($structureData);
-                break;
-            case 3:
-                $hasErrors = $this->hasError($evaluationData);
-                break;
-            default:
-                $this->logger->log('Invalid step ' . $currentStep . ' of user ' . SessionManager::getCurrentUserId(), Logger::WARNING);
-                $hasErrors = $this->hasError($data);
-                break;
-        }
+        // Save the project
+        $newProject = $this->loadProject($data);
 
-        // Do not go to next page if there are errors
-        if (!$hasErrors) {
-            $currentStep++;
+        // Check if the project is new
+        if (isset($project) && $project->id > 0) {
+            // Set the id of the project
+            $newProject->id = $project->id;
 
-            // Has reached last page
-            if ($currentStep >= $maxPage && !$wantPrevious) {
-                // Save the project
-                $newProject = $this->loadProject($data);
+            if ($this->hasChanges($newProject, $project)) {
+                // Reset the status
+                $newProject->status = $this->loadEnum('project/status', 0);
+                $this->logger->log('The project ' . $newProject->id . ' was edited by ' . SessionManager::getCurrentUserId(), Logger::INFO);
+            } elseif ($project->status->value != $newProject->status->value) {
+                // Set the confirmed by
+                $newProject->confirmedBy = SessionManager::getCurrentUserId();
+                $this->logger->log('The status of project ' . $newProject->id . ' has changed to ' . $newProject->status->value . ' by ' . $newProject->confirmedBy, Logger::INFO);
 
-                // Check if the project is new
-                if (isset($project) && $project->id > 0) {
-                    // Set the id of the project
-                    $newProject->id = $project->id;
+                // Load the user repository
+                $userRepository = $this->loadRepository('UserRepository');
+                $owner = $userRepository->getUserById($project->userId);
 
-                    if ($this->hasChanges($newProject, $project)) {
-                        // Reset the status
-                        $newProject->status = $this->loadEnum('project/status', 0);
-                        $this->logger->log('The project ' . $newProject->id . ' was edited by ' . SessionManager::getCurrentUserId(), Logger::INFO);
-                    } elseif ($project->status->value != $newProject->status->value) {
-                        // Set the confirmed by
-                        $newProject->confirmedBy = SessionManager::getCurrentUserId();
-                        $this->logger->log('The status of project ' . $newProject->id . ' has changed to ' . $newProject->status->value . ' by ' . $newProject->confirmedBy, Logger::INFO);
+                // Check if the owner exists
+                if (isset($owner)) {
+                    if ($owner->wantsUpdates) {
+                        // Project URL
+                        $projectUrl = URLROOT . '/ProjectController/edit/' . $newProject->id . '/3';
 
-                        // Load the user repository
-                        $userRepository = $this->loadRepository('UserRepository');
-                        $owner = $userRepository->getUserById($project->userId);
-
-                        // Check if the owner exists
-                        if (isset($owner)) {
-                            if ($owner->wantsUpdates) {
-                                // Project URL
-                                $projectUrl = URLROOT . '/ProjectController/edit/' . $newProject->id . '/3';
-
-                                // Inform the user about the status change
-                                $sg = new SendgridService();
-                                $sg->sendStatusChanged($owner->name, $owner->email, $newProject->title, $projectUrl, $newProject->status->name);
-                            } else {
-                                $this->logger->log('User ' . $owner->name . 'does not want to receive updates by mail', Logger::INFO);
-                            }
-                        } else {
-                            $this->logger->log('Owner of project ' . $newProject->id . ' does not exist', Logger::WARNING);
-                        }
+                        // Inform the user about the status change
+                        $sg = new SendgridService();
+                        $sg->sendStatusChanged($owner->name, $owner->email, $newProject->title, $projectUrl, $newProject->status->name);
+                    } else {
+                        $this->logger->log('User ' . $owner->name . 'does not want to receive updates by mail', Logger::INFO);
                     }
-
-                    // Set the download URL
-                    if ((!isset($newProject->downloadUrl) ||  empty($newProject->downloadUrl)) && $newProject->status->value == $this->loadEnum('project/status', 1)->value) {
-                        $newProject->downloadUrl = md5($newProject->id . $newProject->title . $newProject->userId . $newProject->createdAt);
-                        $this->logger->log('The download URL of project ' . $newProject->id . ' has been set to ' . $newProject->downloadUrl, Logger::INFO);
-                    }
+                } else {
+                    $this->logger->log('Owner of project ' . $newProject->id . ' does not exist', Logger::WARNING);
                 }
+            }
 
-                // // Save the project
-                $this->projectRepository->save($newProject);
-                redirect('', true);
+            // Set the download URL
+            if ((!isset($newProject->downloadUrl) ||  empty($newProject->downloadUrl)) && $newProject->status->value == $this->loadEnum('project/status', 1)->value) {
+                $newProject->downloadUrl = md5($newProject->id . $newProject->title . $newProject->userId . $newProject->createdAt);
+                $this->logger->log('The download URL of project ' . $newProject->id . ' has been set to ' . $newProject->downloadUrl, Logger::INFO);
             }
         }
+
+        // // Save the project
+        $this->projectRepository->save($newProject);
+        redirect('', true);
     }
 
     /**
