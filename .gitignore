@@ -3,3 +3,6 @@ logstash/logs/**
 
 # MariaDB
 mariadb/sysdata/**
+
+# Redis
+redis/data/**

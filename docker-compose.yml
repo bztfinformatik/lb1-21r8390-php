@@ -19,6 +19,7 @@ services:
         restart: unless-stopped
         depends_on:
             - logstash
+            - redis
             - mariadb
         networks:
             - public
@@ -36,12 +37,29 @@ services:
             - DB_PASSWD=${DB_PASSWORD}
             - SENDGRID_API_KEY=${SENDGRID_API_KEY}
             - EMAIL_FROM=${EMAIL_FROM}
+            - REDIS_URL=tcp://redis?auth=${REDIS_PASSWORD}
         healthcheck:
             test: curl --fail -s http://localhost:80 || exit 1
             interval: 60s
             retries: 5
             start_period: 30s
             timeout: 10s
+
+    redis:
+        image: redis:latest
+        restart: unless-stopped
+        networks:
+            - database
+        volumes:
+            - ./redis/data:/data
+        environment:
+            - REDIS_PASSWORD=${REDIS_PASSWORD}
+        command: --requirepass ${REDIS_PASSWORD}
+        healthcheck:
+            test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
 
     elasticsearch:
         image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}

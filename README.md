@@ -66,12 +66,17 @@ Trotzdem ist das Projekt noch nicht `100%` fertig. Es fehlt noch, dass das UI au
 -   [x] Datei Viewer
 -   [x] Download
 
+## 4. Abgabe 📦
+
+-   [ ] End to End Tests
+-   [x] Sessions
+    -   [x] Redis
+-   [x] Redirects
+
 ## TODO:
 
--   Tests
+-   VPS Hosting
 
 ## Nice to have:
 
 -   Zip in Mail
--   Redis für Sessions
--   Mehr Testdaten

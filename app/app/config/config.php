@@ -24,3 +24,7 @@ define('DB_PASS', getenv('DB_PASSWD'));
 // SendGrid
 define('SENDGRID_API_KEY', getenv('SENDGRID_API_KEY'));
 define('EMAIL_FROM', getenv('EMAIL_FROM'));
+
+// Session
+ini_set('session.save_handler', 'redis');
+ini_set('session.save_path', getenv('REDIS_URL'));

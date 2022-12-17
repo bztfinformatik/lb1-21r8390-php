@@ -1,6 +1,6 @@
 # Maria DB
 
-MariaDB ist ein von der Gemeinschaft entwickelter Fork des relationalen Datenbankmanagementsystems **MySQL**, der unter der GNU GPL frei bleiben soll. MariaDB wird von Webanwendungen als Datenbankserver verwendet und wird auch von vielen großen Websites, darunter Facebook, Google und Wikipedia, als Datenbankserver genutzt. Der Vorteil von MariaDB ist, dass es eine vollständige Abwärtskompatibilität zu MySQL bietet, aber auch einige neue Funktionen und Verbesserungen enthält. Zudem ist es **Open Source** und unter der GNU GPL lizenziert, was bedeutet, dass es **kostenlos** und frei verfügbar ist.
+MariaDB ist ein von der Gemeinschaft entwickelter Fork des relationalen Datenbankmanagementsystems **MySQL**, der unter der GNU GPL frei bleiben soll. MariaDB wird von Webanwendungen als Datenbankserver verwendet und wird auch von vielen grossen Websites, darunter Facebook, Google und Wikipedia, als Datenbankserver genutzt. Der Vorteil von MariaDB ist, dass es eine vollständige Abwärtskompatibilität zu MySQL bietet, aber auch einige neue Funktionen und Verbesserungen enthält. Zudem ist es **Open Source** und unter der GNU GPL lizenziert, was bedeutet, dass es **kostenlos** und frei verfügbar ist.
 
 ## Adminer
 

@@ -31,7 +31,12 @@ RUN buildDeps=" \
     && rm -r /var/lib/apt/lists/* \
     && a2enmod rewrite
 
-# Install Composer.
+## Install Redis
+### https://gitlab.univ-lorraine.fr/canals5/docker-php/-/blob/master/php/8.1/Dockerfile
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+# Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && ln -s $(composer config --global home) /root/composer
 ENV PATH=$PATH:/root/composer/vendor/bin COMPOSER_ALLOW_SUPERUSER=1
