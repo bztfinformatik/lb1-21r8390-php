@@ -68,6 +68,8 @@ Trotzdem ist das Projekt noch nicht `100%` fertig. Es fehlt noch, dass das UI au
 
 ## 4. Abgabe 📦
 
+In dieser Abgabe wurde sehr viel **getestet** und sichergestellt, dass alles möglichst robust ist. Dabei wurden die **Umleitungen** überprüft, damit keine Fehler auftreten. Die **Sessions** wuerden bereits in der ersten Abgabe umgesetzt. Jedoch wurden sie neu mithilfe von **Redis** verbessert, damit sie unabhängig vom Container sind. **End to End Tests** wurden mit [Codeception](https://codeception.com/) und [Cypress](https://www.cypress.io/) versucht. Der Aufwand war jedoch mit den Container zu gross und die Tests konnten nicht wie gewünscht umgesetzt werden. Trotzdem habe ich aus den Versuchen sehr viel gelernt.
+
 -   [ ] End to End Tests
 -   [x] Sessions
     -   [x] Redis
