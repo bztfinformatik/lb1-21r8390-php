@@ -773,6 +773,8 @@ extra_javascript:
             // Read the zip file
             readfile($zipPath);
 
+            sleep(60);
+
             $this->logger->log('The zip file has been downloaded', Logger::INFO);
         } else {
             $this->throwError("The zip file could not be found at '$zipPath'");
